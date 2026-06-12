@@ -24,3 +24,371 @@ body {
 #app canvas {
   touch-action: none;
 }
+
+/* ===== Overlay de UI (controlado pelo UIManager) ===== */
+#ui-root {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10;
+  color: #f4f1e8;
+}
+
+#ui-root .clickable {
+  pointer-events: auto;
+}
+
+#ui-root button {
+  font: inherit;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* --- topo --- */
+#ui-topbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  padding: calc(10px + env(safe-area-inset-top)) 12px 0;
+}
+
+#ui-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  background: rgba(10, 13, 25, 0.72);
+  border: 1px solid #2c3a4f;
+  border-radius: 10px;
+  padding: 9px 10px;
+  max-width: 56%;
+  line-height: 1.25;
+}
+
+#ui-clues {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #ffd23f;
+  color: #171204;
+  font-weight: 800;
+  font-size: 16px;
+  border: 2px solid #0d0a02;
+  box-shadow: 0 3px 0 #0d0a02;
+}
+
+#ui-clues:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #0d0a02;
+}
+
+/* --- botão contextual --- */
+#ui-interact {
+  position: absolute;
+  right: 14px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  min-height: 56px;
+  max-width: 72%;
+  padding: 14px 20px;
+  border-radius: 16px;
+  font-size: 18px;
+  font-weight: 800;
+  background: #ffd23f;
+  color: #171204;
+  border: 2px solid #0d0a02;
+  box-shadow: 0 4px 0 #0d0a02;
+  display: none;
+}
+
+#ui-interact.visible {
+  display: block;
+}
+
+#ui-interact:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #0d0a02;
+}
+
+/* --- overlays --- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+
+.overlay.visible {
+  display: flex;
+}
+
+.overlay.center {
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 4, 8, 0.55);
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(12px);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* --- diálogo --- */
+#ui-dialogue {
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.dlg-sheet {
+  margin: 10px;
+  margin-bottom: calc(14px + env(safe-area-inset-bottom));
+  background: rgba(13, 16, 28, 0.95);
+  border: 2px solid #ffd23f;
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  animation: rise 0.18s ease-out;
+}
+
+.dlg-portrait {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+}
+
+.dlg-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dlg-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffd23f;
+  margin-bottom: 4px;
+}
+
+.dlg-text {
+  font-size: 17px;
+  line-height: 1.45;
+  min-height: 74px;
+}
+
+.dlg-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 16px;
+  opacity: 0.7;
+  margin-top: 6px;
+}
+
+.dlg-hint {
+  font-style: italic;
+}
+
+/* --- folhas (caderno, acusação, vitória) --- */
+.sheet {
+  margin: auto;
+  width: calc(100% - 28px);
+  max-height: 80%;
+  background: rgba(13, 16, 28, 0.97);
+  border: 2px solid #ffd23f;
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: rise 0.18s ease-out;
+  overflow: hidden;
+}
+
+.sheet h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #ffd23f;
+  letter-spacing: 0.5px;
+}
+
+.sheet .hint {
+  font-size: 16px;
+  opacity: 0.75;
+  margin: 0;
+}
+
+#ui-journal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+#ui-journal-list li {
+  background: #1a2030;
+  border: 1px solid #39425e;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+#ui-journal-list li::before {
+  content: '⚡ ';
+}
+
+#ui-journal-list li.empty {
+  opacity: 0.75;
+}
+
+#ui-journal-list li.empty::before {
+  content: '';
+}
+
+.accuse-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.suspect {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: #1a2030;
+  border: 2px solid #39425e;
+  border-radius: 14px;
+  padding: 12px 14px;
+  color: #f4f1e8;
+  min-height: 64px;
+}
+
+.suspect b {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+
+.suspect span {
+  font-size: 16px;
+  opacity: 0.85;
+  line-height: 1.35;
+}
+
+.suspect:active {
+  border-color: #ffd23f;
+}
+
+.btn-secondary {
+  min-height: 48px;
+  border-radius: 12px;
+  background: #2a3147;
+  color: #f4f1e8;
+  font-size: 16px;
+  font-weight: 700;
+  border: 1px solid #4a5575;
+}
+
+.btn-primary {
+  min-height: 52px;
+  border-radius: 12px;
+  background: #ffd23f;
+  color: #171204;
+  font-size: 18px;
+  font-weight: 800;
+  border: 2px solid #0d0a02;
+  box-shadow: 0 3px 0 #0d0a02;
+}
+
+.btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #0d0a02;
+}
+
+/* --- vitória --- */
+.sheet.victory {
+  text-align: center;
+}
+
+.sheet.victory .case-name {
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.sheet.victory .lesson-label {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffd23f;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.sheet.victory .lesson {
+  font-size: 17px;
+  line-height: 1.5;
+  background: #1a2030;
+  border: 1px solid #39425e;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+/* --- toasts --- */
+.toast-wrap {
+  position: absolute;
+  top: calc(68px + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+}
+
+.toast {
+  background: #10141f;
+  border: 2px solid #ffd23f;
+  color: #f4f1e8;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 10px 16px;
+  animation: toast-in 0.2s ease-out;
+  max-width: 86%;
+  text-align: center;
+}

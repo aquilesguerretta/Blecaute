@@ -13,7 +13,6 @@ export class Boot extends Phaser.Scene {
   create(): void {
     this.makePlayer();
     this.makeSaci();
-    this.makeNpc();
     this.makeLightParts();
     this.makeProps();
     this.makeDevice();
@@ -48,16 +47,6 @@ export class Boot extends Phaser.Scene {
     g.fillCircle(11, 19, 2);
     g.fillCircle(19, 19, 2); // olhos
     g.generateTexture('tex-saci', 30, 34);
-    g.destroy();
-  }
-
-  private makeNpc(): void {
-    const g = this.gfx();
-    g.fillStyle(WORLD_COLORS.npcOutline, 1);
-    g.fillCircle(15, 15, 14);
-    g.fillStyle(0xffffff, 1); // corpo branco: recebe tint da cor do NPC
-    g.fillCircle(15, 15, 12);
-    g.generateTexture('tex-npc', 30, 30);
     g.destroy();
   }
 

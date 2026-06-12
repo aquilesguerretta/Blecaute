@@ -5,7 +5,9 @@ import { Boot } from './scenes/Boot';
 import { World } from './scenes/World';
 
 new Phaser.Game({
-  type: Phaser.AUTO,
+  // CANVAS: rende igual em qualquer WebView/celular e no headless dos testes;
+  // a cena (formas 2D simples) não precisa de WebGL.
+  type: Phaser.CANVAS,
   parent: 'app',
   backgroundColor: GAME.bg,
   scale: {

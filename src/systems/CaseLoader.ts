@@ -54,14 +54,11 @@ const PROP_TEX: Record<string, string> = {
   barrel: 'tex-barrel',
 };
 
-const LABEL_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: "system-ui, 'Segoe UI', sans-serif",
-  fontSize: '16px',
-  color: WORLD_COLORS.label,
-  stroke: WORLD_COLORS.labelStroke,
-  strokeThickness: 4,
-  align: 'center',
-};
+interface LabelOpts {
+  size: number;
+  wrap?: number;
+  middle?: boolean;
+}
 
 function addLabel(
   scene: Phaser.Scene,
@@ -69,13 +66,40 @@ function addLabel(
   y: number,
   text: string,
   depth: number,
-  wrapWidth?: number,
+  opts: LabelOpts,
 ): Phaser.GameObjects.Text {
-  const t = scene.add.text(x, y, text, LABEL_STYLE).setOrigin(0.5, 1).setDepth(depth).setResolution(2);
-  if (wrapWidth) {
-    t.setWordWrapWidth(wrapWidth);
+  const t = scene.add
+    .text(x, y, text, {
+      fontFamily: "system-ui, 'Segoe UI', sans-serif",
+      fontSize: `${opts.size}px`,
+      color: WORLD_COLORS.label,
+      stroke: WORLD_COLORS.labelStroke,
+      strokeThickness: 3,
+      align: 'center',
+    })
+    .setOrigin(0.5, opts.middle ? 0.5 : 1)
+    .setDepth(depth);
+  if (opts.wrap) {
+    t.setWordWrapWidth(opts.wrap);
   }
   return t;
+}
+
+/** Textura de NPC já na cor certa (tint não é confiável no renderer Canvas). */
+function npcTexture(scene: Phaser.Scene, id: string, colorHex: string): string {
+  const key = `tex-npc-${id}`;
+  if (scene.textures.exists(key)) {
+    return key;
+  }
+  const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
+  const g = scene.make.graphics({ x: 0, y: 0 }, false);
+  g.fillStyle(WORLD_COLORS.npcOutline, 1);
+  g.fillCircle(15, 15, 14);
+  g.fillStyle(color, 1);
+  g.fillCircle(15, 15, 12);
+  g.generateTexture(key, 30, 30);
+  g.destroy();
+  return key;
 }
 
 /** Monta o mundo inteiro a partir do JSON do caso. Nada de conteúdo hardcoded. */
@@ -111,7 +135,7 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
       .setDepth(b.y + b.h + 0.5);
     scene.physics.add.existing(base, true);
     colliders.push(base);
-    addLabel(scene, cx, b.y - 6, b.name, b.y + b.h + 1, b.w + 60);
+    addLabel(scene, cx, cy, b.name, b.y + b.h + 1, { size: 13, wrap: b.w - 14, middle: true });
   }
 
   // props decorativos
@@ -126,8 +150,7 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
   // NPCs
   const npcs: SpawnedNpc[] = [];
   for (const n of c.npcs) {
-    const tint = Phaser.Display.Color.HexStringToColor(n.color).color;
-    const obj = scene.add.image(n.x, n.y, 'tex-npc').setTint(tint).setDepth(n.y + 15);
+    const obj = scene.add.image(n.x, n.y, npcTexture(scene, n.id, n.color)).setDepth(n.y + 15);
     scene.tweens.add({
       targets: obj,
       scale: { from: 1, to: 1.06 },
@@ -136,7 +159,7 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
       repeat: -1,
       ease: 'Sine.InOut',
     });
-    addLabel(scene, n.x, n.y - 20, n.name, n.y + 16);
+    addLabel(scene, n.x, n.y - 20, n.name, n.y + 16, { size: 14 });
     npcs.push({ def: n, obj });
   }
 
@@ -144,7 +167,7 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
   const inspectables: SpawnedInspectable[] = [];
   for (const i of c.inspectables) {
     const obj = scene.add.image(i.x, i.y, 'tex-device').setOrigin(0.5, 1).setDepth(i.y);
-    addLabel(scene, i.x, i.y - 36, i.name, i.y + 1, 160);
+    addLabel(scene, i.x, i.y - 36, i.name, i.y + 1, { size: 14, wrap: 130 });
     inspectables.push({ def: i, obj });
   }
 

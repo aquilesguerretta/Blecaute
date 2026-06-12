@@ -187,9 +187,9 @@ export interface CasePin {
 }
 
 export const CASE_PINS: CasePin[] = [
-  { caseId: 'case1', name: 'Vila Aurora', x: 252, y: 556 },
-  { caseId: 'case2', name: 'Centro', x: 290, y: 514, requires: 'case1' },
-  { name: 'Sertão', x: 292, y: 425, comingSoon: true },
+  { caseId: 'case1', name: 'Vila Aurora', x: 228, y: 582 },
+  { caseId: 'case2', name: 'Centro', x: 312, y: 496, requires: 'case1' },
+  { name: 'Sertão', x: 288, y: 408, comingSoon: true },
   { name: 'Norte', x: 148, y: 330, comingSoon: true },
 ];
 

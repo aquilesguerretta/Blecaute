@@ -114,7 +114,63 @@ export const STRINGS = {
   comingSoon: 'em breve',
   lockedPin: 'resolva o caso anterior',
   continueBtn: 'Continuar',
+  expansionTitle: 'Expansão da Cidade',
+  expansionHint: 'O caso fechou. Como a cidade investe agora?',
+  expansionConfirm: 'Sua escolha moldará a cidade.',
+  expansionBack: 'Voltar ao mapa',
 } as const;
+
+// ===== Decisões de expansão pós-caso (efeito real chega no Brief #3) =====
+export interface ExpansionChoice {
+  id: string;
+  /** Emoji placeholder; se existir o asset card_<id>, a UI usa a imagem. */
+  icon: string;
+  title: string;
+  desc: string;
+}
+
+export const EXPANSIONS: Record<string, ExpansionChoice[]> = {
+  case1: [
+    {
+      id: 'solar',
+      icon: '☀️',
+      title: 'Fazenda Solar',
+      desc: 'Energia limpa e barata de dia. Depende do sol — e a vila vive à noite.',
+    },
+    {
+      id: 'eolica',
+      icon: '🌬️',
+      title: 'Eólica',
+      desc: 'Vento do litoral gira turbina dia e noite. Custo alto de instalação.',
+    },
+    {
+      id: 'termica',
+      icon: '🔥',
+      title: 'Térmica (backup)',
+      desc: 'Liga quando precisa e segura qualquer pico. Cara e poluente.',
+    },
+  ],
+  case2: [
+    {
+      id: 'trafo',
+      icon: '🔌',
+      title: 'Upgrade do Trafo',
+      desc: 'Troca o 75 kVA por um maior. Resolve o quarteirão — custo vai à tarifa.',
+    },
+    {
+      id: 'bateria',
+      icon: '🔋',
+      title: 'Bateria de Bairro',
+      desc: 'Armazena na madrugada, devolve no pico. Tecnologia nova e cara.',
+    },
+    {
+      id: 'demanda',
+      icon: '📉',
+      title: 'Resposta da Demanda',
+      desc: 'Tarifa inteligente desloca o consumo. Barata, mas exige adesão.',
+    },
+  ],
+};
 
 export const SAVE_KEY = 'blecaute.save.v2';
 export const SAVE_KEY_LEGACY = 'blecaute.save.v1';

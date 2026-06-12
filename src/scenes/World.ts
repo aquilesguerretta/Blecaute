@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { Case, ClueDef, DialoguePage, InspectableDef, NpcDef } from '../data/schema';
-import { CAMERA, COMPANION, INTERACT, PLAYER, STRINGS } from '../config';
+import { CAMERA, COMPANION, EXPANSIONS, INTERACT, PLAYER, STRINGS } from '../config';
+import { ExpansionCard } from '../ui/ExpansionCard';
 import { buildWorld, clueIndex, loadCase, type LightField } from '../systems/CaseLoader';
 import { ClueJournal } from '../systems/ClueJournal';
 import { Companion } from '../systems/Companion';
@@ -31,6 +32,7 @@ export class World extends Phaser.Scene {
   private prog!: CaseProgress;
   private caseId!: string;
   private lightField!: LightField;
+  private expansion: ExpansionCard | null = null;
 
   constructor() {
     super('World');
@@ -75,7 +77,11 @@ export class World extends Phaser.Scene {
     this.ui = new UIManager(this.game.canvas, (key) => this.textures.exists(key));
     this.ui.setTitle(this.caseData.title);
     this.dialogue = new DialogueSystem(this.ui);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.ui.destroy());
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.ui.destroy();
+      this.expansion?.destroy();
+      this.expansion = null;
+    });
 
     this.journal = new ClueJournal(clueIndex(this.caseData));
     this.journal.onChange = (j) => {
@@ -227,10 +233,38 @@ export class World extends Phaser.Scene {
       this.save.currentCase = null;
       this.persist();
       this.lightField.solve(true);
+      this.ui.toast(STRINGS.solvedToast);
       this.ui.showVictory(this.caseData.title, this.caseData.victory.lesson, () =>
-        this.ui.toast(STRINGS.solvedToast),
+        this.afterVictory(),
       );
     });
+  }
+
+  /** Pós-vitória: decisão de expansão (uma vez por caso) e volta ao mapa. */
+  private afterVictory(): void {
+    const choices = EXPANSIONS[this.caseId];
+    if (choices && !this.save.choices[this.caseId]) {
+      this.expansion = new ExpansionCard();
+      this.expansion.show(
+        choices,
+        (key) => this.textures.exists(key),
+        (choiceId) => {
+          this.expansion = null;
+          this.save.choices[this.caseId] = choiceId;
+          this.persist();
+          this.gotoMap();
+        },
+      );
+      return;
+    }
+    this.gotoMap();
+  }
+
+  private gotoMap(): void {
+    this.cameras.main.fadeOut(220, 5, 6, 10);
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () =>
+      this.scene.start('CaseMap'),
+    );
   }
 
   private persist(): void {
@@ -256,7 +290,7 @@ export class World extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
-    const modal = this.ui.isModalOpen();
+    const modal = this.ui.isModalOpen() || this.expansion !== null;
     this.joystick.setEnabled(!modal);
 
     const v = this.joystick.vector();

@@ -112,6 +112,18 @@ export class World extends Phaser.Scene {
         this.ui.toast(this.caseData.title);
       });
     }
+
+    // gancho somente leitura para a verificação automatizada (playwright)
+    (window as unknown as Record<string, unknown>).__blecaute = {
+      getState: () => ({
+        x: this.player.x,
+        y: this.player.y,
+        clues: this.journal.count,
+        solved: this.state.solved,
+        lightsOn: this.lightField.solved,
+        modal: this.ui.isModalOpen(),
+      }),
+    };
   }
 
   private talkToNpc(def: NpcDef): void {

@@ -110,9 +110,38 @@ export const STRINGS = {
   saciHint: (n: number, min: number) =>
     `Temos ${n} de ${min} pistas. Fala com o povo e inspeciona os equipamentos — aí sim a gente acusa!`,
   rebuttalFallback: 'Esse aí não foi, não. Olha as pistas de novo!',
+  subtitle: 'Apague as dúvidas. Reacenda a verdade.',
+  comingSoon: 'em breve',
+  lockedPin: 'resolva o caso anterior',
+  continueBtn: 'Continuar',
 } as const;
 
-export const SAVE_KEY = 'blecaute.save.v1';
+export const SAVE_KEY = 'blecaute.save.v2';
+export const SAVE_KEY_LEGACY = 'blecaute.save.v1';
+
+// ===== Hub de casos (CaseMap) =====
+export interface CasePin {
+  caseId?: string;
+  name: string;
+  x: number;
+  y: number;
+  comingSoon?: boolean;
+  /** Caso que precisa estar resolvido para desbloquear este pin. */
+  requires?: string;
+}
+
+export const CASE_PINS: CasePin[] = [
+  { caseId: 'case1', name: 'Vila Aurora', x: 252, y: 556 },
+  { caseId: 'case2', name: 'Centro', x: 290, y: 514, requires: 'case1' },
+  { name: 'Sertão', x: 292, y: 425, comingSoon: true },
+  { name: 'Norte', x: 148, y: 330, comingSoon: true },
+];
+
+export const PIN_COLORS = {
+  available: 0xffd23f,
+  locked: 0x3a4150,
+  solved: 0x46c46e,
+} as const;
 
 // ===== Pipeline de assets (scripts/process-assets.mjs lê este mapa) =====
 // Largura-alvo (px) por nome de arquivo em /raw. Altura segue o aspect ratio.

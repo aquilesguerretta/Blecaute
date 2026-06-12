@@ -7,7 +7,13 @@ import { Companion } from '../systems/Companion';
 import { DialogueSystem } from '../systems/DialogueSystem';
 import { VirtualJoystick } from '../systems/Input';
 import { Interactables, type Interactable } from '../systems/Interactables';
-import { defaultSave, loadSave, writeSave, type SaveData } from '../systems/SaveState';
+import {
+  getProgress,
+  loadSave,
+  writeSave,
+  type CaseProgress,
+  type SaveData,
+} from '../systems/SaveState';
 import { UIManager } from '../ui/UIManager';
 
 export class World extends Phaser.Scene {
@@ -21,7 +27,9 @@ export class World extends Phaser.Scene {
   private currentInteract: Interactable | null = null;
   private lastInteractLabel: string | null = null;
   private journal!: ClueJournal;
-  private state!: SaveData;
+  private save!: SaveData;
+  private prog!: CaseProgress;
+  private caseId!: string;
   private lightField!: LightField;
 
   constructor() {
@@ -29,12 +37,17 @@ export class World extends Phaser.Scene {
   }
 
   create(data?: { caseId?: string }): void {
-    this.caseData = loadCase(data?.caseId ?? 'case1');
-    const save = loadSave();
-    this.state = save && save.caseId === this.caseData.id ? save : defaultSave(this.caseData.id);
+    this.caseId = data?.caseId ?? 'case1';
+    this.caseData = loadCase(this.caseId);
+    this.save = loadSave();
+    this.prog = getProgress(this.save, this.caseId);
+    if (!this.prog.solved) {
+      this.save.currentCase = this.caseId;
+    }
+    this.cameras.main.fadeIn(250, 5, 6, 10);
     const built = buildWorld(this, this.caseData);
     this.lightField = built.lights;
-    if (this.state.solved) {
+    if (this.prog.solved) {
       this.lightField.solve(false);
     }
 
@@ -70,7 +83,7 @@ export class World extends Phaser.Scene {
       this.persist();
     };
     this.ui.setClues(this.journal.count, this.journal.total);
-    this.journal.restore(this.state.clues);
+    this.journal.restore(this.prog.clues);
     this.ui.onCluesClick = () => {
       if (!this.ui.isModalOpen()) {
         this.ui.showJournal(this.journal.texts());
@@ -104,28 +117,31 @@ export class World extends Phaser.Scene {
       radius: COMPANION.interactRadius,
       getXY: () => ({ x: this.saci.x, y: this.saci.y }),
       label: () =>
-        !this.state.solved && this.journal.count >= this.caseData.minClues
+        !this.prog.solved && this.journal.count >= this.caseData.minClues
           ? STRINGS.accuse
           : STRINGS.talkCompanion,
       action: () => this.talkToSaci(),
     });
     this.ui.onInteract = () => this.currentInteract?.action();
 
-    if (!this.state.introSeen) {
+    if (!this.prog.introSeen) {
       this.dialogue.open(this.caseData.intro, () => {
-        this.state.introSeen = true;
+        this.prog.introSeen = true;
         this.persist();
         this.ui.toast(this.caseData.title);
       });
     }
+
+    this.persist();
 
     // gancho somente leitura para a verificação automatizada (playwright)
     (window as unknown as Record<string, unknown>).__blecaute = {
       getState: () => ({
         x: this.player.x,
         y: this.player.y,
+        caseId: this.caseId,
         clues: this.journal.count,
-        solved: this.state.solved,
+        solved: this.prog.solved,
         lightsOn: this.lightField.solved,
         modal: this.ui.isModalOpen(),
       }),
@@ -168,7 +184,7 @@ export class World extends Phaser.Scene {
   }
 
   private talkToSaci(): void {
-    if (this.state.solved) {
+    if (this.prog.solved) {
       // recapitula a solução depois do caso fechado
       this.dialogue.open([
         this.saciPage(this.caseData.victory.reveal),
@@ -204,7 +220,11 @@ export class World extends Phaser.Scene {
       return;
     }
     this.dialogue.open([this.saciPage(this.caseData.victory.reveal)], () => {
-      this.state.solved = true;
+      this.prog.solved = true;
+      if (!this.save.casesCompleted.includes(this.caseId)) {
+        this.save.casesCompleted.push(this.caseId);
+      }
+      this.save.currentCase = null;
       this.persist();
       this.lightField.solve(true);
       this.ui.showVictory(this.caseData.title, this.caseData.victory.lesson, () =>
@@ -214,8 +234,8 @@ export class World extends Phaser.Scene {
   }
 
   private persist(): void {
-    this.state.clues = this.journal.ids();
-    writeSave(this.state);
+    this.prog.clues = this.journal.ids();
+    writeSave(this.save);
   }
 
   private refreshInteract(modal: boolean): void {

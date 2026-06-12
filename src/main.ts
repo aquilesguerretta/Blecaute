@@ -2,6 +2,7 @@ import './style.css';
 import Phaser from 'phaser';
 import { GAME } from './config';
 import { Boot } from './scenes/Boot';
+import { CaseMap } from './scenes/CaseMap';
 import { World } from './scenes/World';
 
 new Phaser.Game({
@@ -27,5 +28,5 @@ new Phaser.Game({
     roundPixels: true,
     antialias: true,
   },
-  scene: [Boot, World],
+  scene: [Boot, CaseMap, World],
 });

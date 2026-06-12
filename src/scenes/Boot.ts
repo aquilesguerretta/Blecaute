@@ -39,7 +39,26 @@ export class Boot extends Phaser.Scene {
   }
 
   private route(): void {
-    this.scene.start('World', { caseId: caseIdFromQuery() ?? 'case1' });
+    // espera a Bangers carregar (com teto de 1s) para o título do CaseMap
+    const fontReady = document.fonts
+      ? document.fonts.load('64px Bangers').then(() => undefined)
+      : Promise.resolve(undefined);
+    const timeout = new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 1000);
+    });
+    Promise.race([fontReady, timeout]).then(
+      () => this.go(),
+      () => this.go(),
+    );
+  }
+
+  private go(): void {
+    const fromQuery = caseIdFromQuery();
+    if (fromQuery) {
+      this.scene.start('World', { caseId: fromQuery });
+    } else {
+      this.scene.start('CaseMap');
+    }
   }
 
   private gfx(): Phaser.GameObjects.Graphics {

@@ -95,7 +95,7 @@ export const STRINGS = {
   talkCompanion: `Falar com o ${COMPANION.name}`,
   accuse: 'ACUSAR',
   clues: (n: number, total: number) => `Pistas ${n}/${total}`,
-  clueAdded: 'Pista anotada no caderno!',
+  clueAdded: '📓 Pista anotada!',
   journalTitle: 'Caderno de Pistas',
   journalEmpty: 'Nenhuma pista ainda. Fale com o povo e inspecione os equipamentos.',
   close: 'Fechar',

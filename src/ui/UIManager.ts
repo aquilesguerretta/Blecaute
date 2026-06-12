@@ -1,6 +1,14 @@
 import type { DialoguePage, SuspectDef } from '../data/schema';
 import { STRINGS, UI } from '../config';
 
+// fallback quando o asset de ícone não está disponível
+const ICON_EMOJI: Record<string, string> = {
+  icon_speech: '💬',
+  icon_magnifier: '🔍',
+  icon_warning: '⚡',
+  icon_notebook: '📓',
+};
+
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   className: string,
@@ -31,6 +39,8 @@ export class UIManager {
   private root: HTMLDivElement;
   private titleEl: HTMLDivElement;
   private cluesBtn: HTMLButtonElement;
+  private cluesText: HTMLSpanElement;
+  private cluesBadge: HTMLSpanElement;
   private interactBtn: HTMLButtonElement;
   private toastWrap: HTMLDivElement;
 
@@ -65,15 +75,22 @@ export class UIManager {
     this.root = el('div', '', document.body as HTMLElement);
     this.root.id = 'ui-root';
 
-    // topo: título do caso + botão do caderno
+    // topo: botão do caderno (esquerda) + título do caso (direita)
     const topbar = el('div', '', this.root);
     topbar.id = 'ui-topbar';
-    this.titleEl = el('div', '', topbar);
-    this.titleEl.id = 'ui-title';
     this.cluesBtn = el('button', 'clickable', topbar);
     this.cluesBtn.id = 'ui-clues';
     this.cluesBtn.type = 'button';
+    if (hasAsset('icon_notebook')) {
+      const img = el('img', 'btn-icon', this.cluesBtn);
+      img.src = 'assets/icon_notebook.png';
+      img.alt = '';
+    }
+    this.cluesText = el('span', '', this.cluesBtn);
+    this.cluesBadge = el('span', 'clue-unread', this.cluesBtn);
     this.cluesBtn.addEventListener('click', () => this.onCluesClick?.());
+    this.titleEl = el('div', '', topbar);
+    this.titleEl.id = 'ui-title';
 
     this.toastWrap = el('div', 'toast-wrap', this.root);
 
@@ -147,12 +164,28 @@ export class UIManager {
     this.titleEl.textContent = t;
   }
 
-  setClues(n: number, total: number): void {
-    this.cluesBtn.textContent = STRINGS.clues(n, total);
+  setClues(n: number, total: number, unread = 0): void {
+    this.cluesText.textContent = STRINGS.clues(n, total);
+    if (unread > 0) {
+      this.cluesBadge.textContent = String(unread);
+      this.cluesBadge.style.display = 'flex';
+    } else {
+      this.cluesBadge.style.display = 'none';
+    }
   }
 
-  showInteract(label: string): void {
-    this.interactBtn.textContent = label;
+  showInteract(label: string, iconKey?: string): void {
+    this.interactBtn.replaceChildren();
+    if (iconKey) {
+      if (this.hasAsset(iconKey)) {
+        const img = el('img', 'btn-icon', this.interactBtn);
+        img.src = `assets/${iconKey}.png`;
+        img.alt = '';
+      } else {
+        el('span', 'btn-emoji', this.interactBtn, ICON_EMOJI[iconKey] ?? '•');
+      }
+    }
+    el('span', '', this.interactBtn, label);
     this.interactBtn.classList.add('visible');
   }
 

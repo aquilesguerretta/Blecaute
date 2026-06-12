@@ -6,9 +6,22 @@ export class ClueJournal {
 
   private byId: Map<string, string>;
   private collected = new Map<string, string>();
+  private unreadCount = 0;
 
   constructor(allClues: Map<string, string>) {
     this.byId = allClues;
+  }
+
+  /** Pistas novas desde a última leitura do caderno (badge vermelho). */
+  get unread(): number {
+    return this.unreadCount;
+  }
+
+  markAllRead(): void {
+    if (this.unreadCount !== 0) {
+      this.unreadCount = 0;
+      this.onChange?.(this);
+    }
   }
 
   get total(): number {
@@ -29,6 +42,7 @@ export class ClueJournal {
       return false;
     }
     this.collected.set(clue.id, clue.text);
+    this.unreadCount += 1;
     this.onChange?.(this);
     return true;
   }

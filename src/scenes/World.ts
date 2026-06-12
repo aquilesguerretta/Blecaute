@@ -85,7 +85,7 @@ export class World extends Phaser.Scene {
 
     this.journal = new ClueJournal(clueIndex(this.caseData));
     this.journal.onChange = (j) => {
-      this.ui.setClues(j.count, j.total);
+      this.ui.setClues(j.count, j.total, j.unread);
       this.persist();
     };
     this.ui.setClues(this.journal.count, this.journal.total);
@@ -93,6 +93,7 @@ export class World extends Phaser.Scene {
     this.ui.onCluesClick = () => {
       if (!this.ui.isModalOpen()) {
         this.ui.showJournal(this.journal.texts());
+        this.journal.markAllRead();
       }
     };
 
@@ -177,6 +178,17 @@ export class World extends Phaser.Scene {
   private collectClue(clue?: ClueDef): void {
     if (clue && this.journal.add(clue)) {
       this.ui.toast(STRINGS.clueAdded);
+      this.vibrate(40);
+    }
+  }
+
+  private vibrate(pattern: number | number[]): void {
+    if ('vibrate' in navigator) {
+      try {
+        navigator.vibrate(pattern);
+      } catch {
+        // haptics indisponível — segue sem
+      }
     }
   }
 
@@ -225,6 +237,8 @@ export class World extends Phaser.Scene {
       this.dialogue.open([this.saciPage(suspect.rebuttal ?? STRINGS.rebuttalFallback)]);
       return;
     }
+    this.cameras.main.flash(220, 255, 240, 180);
+    this.vibrate([40, 30, 80]);
     this.dialogue.open([this.saciPage(this.caseData.victory.reveal)], () => {
       this.prog.solved = true;
       if (!this.save.casesCompleted.includes(this.caseId)) {
@@ -284,7 +298,13 @@ export class World extends Phaser.Scene {
     }
     const label = next.label();
     if (label !== this.lastInteractLabel) {
-      this.ui.showInteract(label);
+      const icon =
+        next.kind === 'inspect'
+          ? 'icon_magnifier'
+          : label === STRINGS.accuse
+            ? 'icon_warning'
+            : 'icon_speech';
+      this.ui.showInteract(label, icon);
       this.lastInteractLabel = label;
     }
   }

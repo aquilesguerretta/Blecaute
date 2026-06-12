@@ -1,5 +1,5 @@
 {
-  "name": "blecaute-tmp",
+  "name": "blecaute",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,10 +9,11 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "playwright": "^1.60.0",
     "typescript": "~6.0.2",
     "vite": "^8.0.12"
   },
   "dependencies": {
-    "phaser": "^4.1.0"
+    "phaser": "^3.90.0"
   }
 }

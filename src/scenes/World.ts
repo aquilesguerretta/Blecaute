@@ -1,11 +1,13 @@
 import Phaser from 'phaser';
-import type { Case, InspectableDef, NpcDef } from '../data/schema';
+import type { Case, ClueDef, InspectableDef, NpcDef } from '../data/schema';
 import { CAMERA, INTERACT, PLAYER, STRINGS } from '../config';
 import { buildWorld, clueIndex, loadCase } from '../systems/CaseLoader';
+import { ClueJournal } from '../systems/ClueJournal';
 import { Companion } from '../systems/Companion';
 import { DialogueSystem } from '../systems/DialogueSystem';
 import { VirtualJoystick } from '../systems/Input';
 import { Interactables, type Interactable } from '../systems/Interactables';
+import { defaultSave, loadSave, writeSave, type SaveData } from '../systems/SaveState';
 import { UIManager } from '../ui/UIManager';
 
 export class World extends Phaser.Scene {
@@ -18,6 +20,8 @@ export class World extends Phaser.Scene {
   private interactables!: Interactables;
   private currentInteract: Interactable | null = null;
   private lastInteractLabel: string | null = null;
+  private journal!: ClueJournal;
+  private state!: SaveData;
 
   constructor() {
     super('World');
@@ -25,6 +29,8 @@ export class World extends Phaser.Scene {
 
   create(): void {
     this.caseData = loadCase('case1');
+    const save = loadSave();
+    this.state = save && save.caseId === this.caseData.id ? save : defaultSave(this.caseData.id);
     const built = buildWorld(this, this.caseData);
 
     const { w, h } = this.caseData.world;
@@ -44,9 +50,21 @@ export class World extends Phaser.Scene {
 
     this.ui = new UIManager(this.game.canvas);
     this.ui.setTitle(this.caseData.title);
-    this.ui.setClues(0, clueIndex(this.caseData).size);
     this.dialogue = new DialogueSystem(this.ui);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.ui.destroy());
+
+    this.journal = new ClueJournal(clueIndex(this.caseData));
+    this.journal.onChange = (j) => {
+      this.ui.setClues(j.count, j.total);
+      this.persist();
+    };
+    this.ui.setClues(this.journal.count, this.journal.total);
+    this.journal.restore(this.state.clues);
+    this.ui.onCluesClick = () => {
+      if (!this.ui.isModalOpen()) {
+        this.ui.showJournal(this.journal.texts());
+      }
+    };
 
     this.interactables = new Interactables();
     for (const { def } of built.npcs) {
@@ -71,12 +89,18 @@ export class World extends Phaser.Scene {
     }
     this.ui.onInteract = () => this.currentInteract?.action();
 
-    this.dialogue.open(this.caseData.intro, () => this.ui.toast(this.caseData.title));
+    if (!this.state.introSeen) {
+      this.dialogue.open(this.caseData.intro, () => {
+        this.state.introSeen = true;
+        this.persist();
+        this.ui.toast(this.caseData.title);
+      });
+    }
   }
 
   private talkToNpc(def: NpcDef): void {
     const pages = def.dialogue.map((text) => ({ speaker: def.name, text, color: def.color }));
-    this.dialogue.open(pages);
+    this.dialogue.open(pages, () => this.collectClue(def.clue));
   }
 
   private inspect(def: InspectableDef): void {
@@ -85,7 +109,18 @@ export class World extends Phaser.Scene {
       text,
       color: INTERACT.inspectPortrait,
     }));
-    this.dialogue.open(pages);
+    this.dialogue.open(pages, () => this.collectClue(def.clue));
+  }
+
+  private collectClue(clue?: ClueDef): void {
+    if (clue && this.journal.add(clue)) {
+      this.ui.toast(STRINGS.clueAdded);
+    }
+  }
+
+  private persist(): void {
+    this.state.clues = this.journal.ids();
+    writeSave(this.state);
   }
 
   private refreshInteract(modal: boolean): void {

@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# fontes de arte pesadas (processadas para /public/assets via npm run assets;
+# backup da pasta fica no OneDrive)
+/raw/*.png

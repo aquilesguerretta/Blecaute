@@ -1,0 +1,225 @@
+import Phaser from 'phaser';
+import case1 from '../data/case1.json';
+import type { Case, InspectableDef, LightDef, NpcDef } from '../data/schema';
+import { DEPTHS, LIGHTS, WORLD_COLORS } from '../config';
+
+// Registro de casos disponíveis. Novos casos: importar o JSON e listar aqui.
+const CASES: Record<string, unknown> = { case1 };
+
+export function loadCase(id: string): Case {
+  const data = CASES[id];
+  if (!data) {
+    throw new Error(`Caso desconhecido: ${id}`);
+  }
+  return data as Case;
+}
+
+/** Mapa id da pista -> texto, com tudo que o caso oferece (define o total do caderno). */
+export function clueIndex(c: Case): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const npc of c.npcs) {
+    if (npc.clue) {
+      map.set(npc.clue.id, npc.clue.text);
+    }
+  }
+  for (const ins of c.inspectables) {
+    if (ins.clue) {
+      map.set(ins.clue.id, ins.clue.text);
+    }
+  }
+  return map;
+}
+
+export interface SpawnedNpc {
+  def: NpcDef;
+  obj: Phaser.GameObjects.Image;
+}
+
+export interface SpawnedInspectable {
+  def: InspectableDef;
+  obj: Phaser.GameObjects.Image;
+}
+
+export interface BuiltWorld {
+  colliders: Phaser.GameObjects.Rectangle[];
+  lights: LightField;
+  npcs: SpawnedNpc[];
+  inspectables: SpawnedInspectable[];
+}
+
+const PROP_TEX: Record<string, string> = {
+  tree: 'tex-tree',
+  bush: 'tex-bush',
+  rock: 'tex-rock',
+  barrel: 'tex-barrel',
+};
+
+const LABEL_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
+  fontFamily: "system-ui, 'Segoe UI', sans-serif",
+  fontSize: '16px',
+  color: WORLD_COLORS.label,
+  stroke: WORLD_COLORS.labelStroke,
+  strokeThickness: 4,
+  align: 'center',
+};
+
+function addLabel(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  text: string,
+  depth: number,
+  wrapWidth?: number,
+): Phaser.GameObjects.Text {
+  const t = scene.add.text(x, y, text, LABEL_STYLE).setOrigin(0.5, 1).setDepth(depth).setResolution(2);
+  if (wrapWidth) {
+    t.setWordWrapWidth(wrapWidth);
+  }
+  return t;
+}
+
+/** Monta o mundo inteiro a partir do JSON do caso. Nada de conteúdo hardcoded. */
+export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
+  const { w, h } = c.world;
+
+  // chão + pontilhado sutil de grama (padrão determinístico)
+  scene.add.rectangle(w / 2, h / 2, w, h, WORLD_COLORS.ground).setDepth(DEPTHS.ground);
+  const deco = scene.add.graphics().setDepth(DEPTHS.deco);
+  deco.fillStyle(WORLD_COLORS.groundDot, 1);
+  for (let y = 40; y < h; y += 88) {
+    const offset = ((y / 88) % 2) * 44;
+    for (let x = 40 + offset; x < w; x += 88) {
+      deco.fillCircle(x, y, 3);
+    }
+  }
+  scene.add
+    .rectangle(w / 2, h / 2, w - 4, h - 4, 0, 0)
+    .setStrokeStyle(3, WORLD_COLORS.border, 1)
+    .setDepth(DEPTHS.deco);
+
+  // prédios: sprite único (retângulo placeholder) + corpo estático AABB
+  const colliders: Phaser.GameObjects.Rectangle[] = [];
+  for (const b of c.world.buildings) {
+    const cx = b.x + b.w / 2;
+    const cy = b.y + b.h / 2;
+    const base = scene.add
+      .rectangle(cx, cy, b.w, b.h, WORLD_COLORS.building)
+      .setStrokeStyle(2, WORLD_COLORS.buildingLine, 1)
+      .setDepth(b.y + b.h);
+    scene.add
+      .rectangle(cx, cy - 8, b.w - 16, b.h - 26, WORLD_COLORS.buildingTop)
+      .setDepth(b.y + b.h + 0.5);
+    scene.physics.add.existing(base, true);
+    colliders.push(base);
+    addLabel(scene, cx, b.y - 6, b.name, b.y + b.h + 1, b.w + 60);
+  }
+
+  // props decorativos
+  for (const p of c.world.props) {
+    const key = PROP_TEX[p.kind] ?? 'tex-rock';
+    scene.add.image(p.x, p.y, key).setOrigin(0.5, 1).setDepth(p.y);
+  }
+
+  // postes de luz com flicker (param de piscar quando o caso é resolvido)
+  const lights = new LightField(scene, c.world.lights);
+
+  // NPCs
+  const npcs: SpawnedNpc[] = [];
+  for (const n of c.npcs) {
+    const tint = Phaser.Display.Color.HexStringToColor(n.color).color;
+    const obj = scene.add.image(n.x, n.y, 'tex-npc').setTint(tint).setDepth(n.y + 15);
+    scene.tweens.add({
+      targets: obj,
+      scale: { from: 1, to: 1.06 },
+      duration: 900,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.InOut',
+    });
+    addLabel(scene, n.x, n.y - 20, n.name, n.y + 16);
+    npcs.push({ def: n, obj });
+  }
+
+  // inspecionáveis
+  const inspectables: SpawnedInspectable[] = [];
+  for (const i of c.inspectables) {
+    const obj = scene.add.image(i.x, i.y, 'tex-device').setOrigin(0.5, 1).setDepth(i.y);
+    addLabel(scene, i.x, i.y - 36, i.name, i.y + 1, 160);
+    inspectables.push({ def: i, obj });
+  }
+
+  return { colliders, lights, npcs, inspectables };
+}
+
+interface LightParts {
+  lamp: Phaser.GameObjects.Image;
+  glow: Phaser.GameObjects.Image;
+  timer?: Phaser.Time.TimerEvent;
+}
+
+/** Conjunto de postes do mapa: pisca enquanto o caso está aberto, acende ao resolver. */
+export class LightField {
+  private scene: Phaser.Scene;
+  private parts: LightParts[] = [];
+  private isSolved = false;
+
+  constructor(scene: Phaser.Scene, defs: LightDef[]) {
+    this.scene = scene;
+    for (const d of defs) {
+      scene.add.image(d.x, d.y, 'tex-pole').setOrigin(0.5, 1).setDepth(d.y);
+      const lamp = scene.add.image(d.x, d.y - 30, 'tex-lamp').setDepth(d.y);
+      const glow = scene.add
+        .image(d.x, d.y - 30, 'tex-glow')
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(DEPTHS.glow);
+      const p: LightParts = { lamp, glow };
+      this.parts.push(p);
+      this.schedule(p);
+    }
+  }
+
+  get solved(): boolean {
+    return this.isSolved;
+  }
+
+  private schedule(p: LightParts): void {
+    const delay = Phaser.Math.Between(LIGHTS.flickerMin, LIGHTS.flickerMax);
+    p.timer = this.scene.time.delayedCall(delay, () => {
+      if (this.isSolved) {
+        return;
+      }
+      const blackout = Math.random() < LIGHTS.blackoutChance;
+      const a = blackout ? 0.06 : 0.35 + Math.random() * 0.65;
+      p.lamp.setAlpha(a);
+      p.glow.setAlpha(a * LIGHTS.glowAlphaScale);
+      this.schedule(p);
+    });
+  }
+
+  solve(animated: boolean): void {
+    if (this.isSolved) {
+      return;
+    }
+    this.isSolved = true;
+    for (const p of this.parts) {
+      p.timer?.remove(false);
+      if (animated) {
+        this.scene.tweens.add({
+          targets: p.lamp,
+          alpha: 1,
+          duration: LIGHTS.solveTweenMs,
+          ease: 'Sine.Out',
+        });
+        this.scene.tweens.add({
+          targets: p.glow,
+          alpha: LIGHTS.glowAlphaScale + 0.1,
+          duration: LIGHTS.solveTweenMs,
+          ease: 'Sine.Out',
+        });
+      } else {
+        p.lamp.setAlpha(1);
+        p.glow.setAlpha(LIGHTS.glowAlphaScale + 0.1);
+      }
+    }
+  }
+}

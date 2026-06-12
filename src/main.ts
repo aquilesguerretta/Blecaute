@@ -1,6 +1,8 @@
 import './style.css';
 import Phaser from 'phaser';
 import { GAME } from './config';
+import { Boot } from './scenes/Boot';
+import { World } from './scenes/World';
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -23,5 +25,5 @@ new Phaser.Game({
     roundPixels: true,
     antialias: true,
   },
-  scene: [],
+  scene: [Boot, World],
 });

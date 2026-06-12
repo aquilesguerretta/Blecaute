@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COMPANION, LIGHTS, PLAYER, WORLD_COLORS } from '../config';
+import { caseIdFromQuery } from '../systems/CaseLoader';
 
 /**
  * Gera todas as texturas placeholder em código (sem assets externos)
@@ -16,7 +17,7 @@ export class Boot extends Phaser.Scene {
     this.makeLightParts();
     this.makeProps();
     this.makeDevice();
-    this.scene.start('World');
+    this.scene.start('World', { caseId: caseIdFromQuery() ?? 'case1' });
   }
 
   private gfx(): Phaser.GameObjects.Graphics {

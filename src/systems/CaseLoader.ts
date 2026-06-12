@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
 import case1 from '../data/case1.json';
+import case2 from '../data/case2.json';
 import type { Case, InspectableDef, LightDef, NpcDef } from '../data/schema';
 import { DEPTHS, LIGHTS, WORLD_COLORS } from '../config';
 
 // Registro de casos disponíveis. Novos casos: importar o JSON e listar aqui.
-const CASES: Record<string, unknown> = { case1 };
+const CASES: Record<string, unknown> = { case1, case2 };
 
 export function loadCase(id: string): Case {
   const data = CASES[id];
@@ -12,6 +13,16 @@ export function loadCase(id: string): Case {
     throw new Error(`Caso desconhecido: ${id}`);
   }
   return data as Case;
+}
+
+/** Suporte a ?case=2 (ou ?case=case2) para teste direto de um caso. */
+export function caseIdFromQuery(): string | null {
+  const raw = new URLSearchParams(window.location.search).get('case');
+  if (!raw) {
+    return null;
+  }
+  const id = raw.startsWith('case') ? raw : `case${raw}`;
+  return CASES[id] ? id : null;
 }
 
 /** Mapa id da pista -> texto, com tudo que o caso oferece (define o total do caderno). */

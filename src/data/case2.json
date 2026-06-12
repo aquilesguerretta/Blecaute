@@ -1,0 +1,180 @@
+{
+  "id": "case2",
+  "title": "Centro — O Pico Fantasma",
+  "minClues": 3,
+  "intro": [
+    {
+      "speaker": "Saci",
+      "color": "#B03A2E",
+      "portraitKey": "portrait_saci",
+      "text": "Caso novo, parceiro! Agora o Centro apaga às 3h da madrugada."
+    },
+    {
+      "speaker": "Saci",
+      "color": "#B03A2E",
+      "portraitKey": "portrait_saci",
+      "text": "O povo já elegeu culpada: a Dona Cida da padaria. Mas eu já fui acusado injustamente o bastante pra desconfiar de unanimidade..."
+    },
+    {
+      "speaker": "Saci",
+      "color": "#B03A2E",
+      "portraitKey": "portrait_saci",
+      "text": "Mesma rotina: povo, equipamentos, caderno. A verdade mora nos dados."
+    }
+  ],
+  "world": {
+    "w": 800,
+    "h": 1200,
+    "buildings": [
+      { "x": 80, "y": 200, "w": 170, "h": 120, "name": "Padaria da Cida", "spriteKey": "building_padaria" },
+      { "x": 560, "y": 150, "w": 160, "h": 110, "name": "Mercearia do Centro", "spriteKey": "building_centro_b" },
+      { "x": 540, "y": 480, "w": 160, "h": 160, "name": "Sobrado das Cortinas Pretas", "spriteKey": "building_sobrado" },
+      { "x": 90, "y": 560, "w": 160, "h": 140, "name": "Prédio Baixo", "spriteKey": "building_centro_a" },
+      { "x": 100, "y": 920, "w": 150, "h": 110, "name": "Salão da Regina", "spriteKey": "building_centro_b" },
+      { "x": 540, "y": 940, "w": 180, "h": 130, "name": "Oficina do Centro" }
+    ],
+    "lights": [
+      { "x": 320, "y": 160 },
+      { "x": 70, "y": 420 },
+      { "x": 420, "y": 300 },
+      { "x": 620, "y": 440 },
+      { "x": 330, "y": 650 },
+      { "x": 470, "y": 650 },
+      { "x": 330, "y": 810 },
+      { "x": 470, "y": 810 },
+      { "x": 120, "y": 800 },
+      { "x": 600, "y": 1100 }
+    ],
+    "props": [
+      { "x": 360, "y": 598, "kind": "tree" },
+      { "x": 445, "y": 598, "kind": "tree" },
+      { "x": 300, "y": 706, "kind": "bush" },
+      { "x": 508, "y": 775, "kind": "bush" },
+      { "x": 745, "y": 330, "kind": "tree" },
+      { "x": 50, "y": 300, "kind": "tree" },
+      { "x": 740, "y": 760, "kind": "tree" },
+      { "x": 60, "y": 650, "kind": "rock" },
+      { "x": 280, "y": 880, "kind": "barrel" },
+      { "x": 700, "y": 1010, "kind": "tree" },
+      { "x": 150, "y": 1160, "kind": "bush" },
+      { "x": 420, "y": 1080, "kind": "rock" },
+      { "x": 620, "y": 300, "kind": "bush" }
+    ]
+  },
+  "npcs": [
+    {
+      "id": "cida",
+      "name": "Dona Cida",
+      "x": 190,
+      "y": 360,
+      "color": "#EF9F27",
+      "dialogue": [
+        "Todo mundo me olhando torto! SIM, meus fornos ligam às 4h da manhã. Padaria é isso.",
+        "Mas presta atenção, mocinho: a luz cai às TRÊS. Uma hora ANTES do meu forno. Conta essa matemática pra vizinhança."
+      ],
+      "clue": {
+        "id": "c1",
+        "text": "A queda é às 3h — os fornos da padaria só ligam às 4h."
+      }
+    },
+    {
+      "id": "nando",
+      "name": "Nando",
+      "x": 430,
+      "y": 700,
+      "color": "#378ADD",
+      "dialogue": [
+        "Eu rodo a cidade a noite inteira, conheço cada barulho.",
+        "Tem um sobrado na rua de trás com ar-condicionado roncando 24 horas. Janela fechada, cortina PRETA, e sai um calorão da parede. Pra que tanto frio numa casa que ninguém entra nem sai?"
+      ],
+      "clue": {
+        "id": "c2",
+        "text": "Sobrado de cortinas pretas: AC roncando dia e noite, calor saindo da parede."
+      }
+    },
+    {
+      "id": "regina",
+      "name": "Síndica Regina",
+      "x": 220,
+      "y": 1070,
+      "color": "#D4537E",
+      "dialogue": [
+        "O rapaz do sobrado? Quietinho, paga tudo em dia, alugou faz uns 3 meses.",
+        "Curioso é que ele pediu TRÊS ligações novas de energia. Disse que ia dividir em kitnets. Nunca vi obra, nunca vi morador..."
+      ],
+      "clue": {
+        "id": "c3",
+        "text": "Três ligações novas no mesmo sobrado, pra 'kitnets' que não existem."
+      }
+    }
+  ],
+  "inspectables": [
+    {
+      "id": "curva-ct07",
+      "name": "Curva de carga · Alimentador CT-07",
+      "x": 450,
+      "y": 430,
+      "dialogue": [
+        "Curva de carga do alimentador, últimas 24h:",
+        "Madrugada: um bloco CHAPADO de 80 kW, das 0h às 6h. Reto feito régua.",
+        "Bairro dormindo desenha um VALE na curva. Gente acorda, dorme, oscila. Máquina não: máquina desenha retângulo."
+      ],
+      "clue": {
+        "id": "c4",
+        "text": "Bloco constante de 80 kW na madrugada — assinatura de máquina, não de gente."
+      }
+    },
+    {
+      "id": "trafo-quarteirao",
+      "name": "Transformador do quarteirão",
+      "x": 500,
+      "y": 700,
+      "dialogue": [
+        "Trafo de 75 kVA · temperatura às 3h da manhã: 96°C.",
+        "Três medidores novos no mesmo endereço, todos girando no talo, madrugada adentro.",
+        "75 kVA segurando 80 kW de bloco... ele desarma às 3h de exaustão. Todo santo dia."
+      ],
+      "clue": {
+        "id": "c5",
+        "text": "Trafo de 75 kVA desarmando sob 80 kW — 3 medidores do mesmo endereço no máximo."
+      }
+    },
+    {
+      "id": "medidor-padaria",
+      "name": "Medidor da padaria",
+      "x": 265,
+      "y": 250,
+      "dialogue": [
+        "Medidor da padaria · consumo alto, MAS o perfil é honesto:",
+        "sobe às 4h com os fornos, desce às 10h. Pico de quem trabalha.",
+        "Perfil bate com a versão da Dona Cida, hora por hora."
+      ]
+    }
+  ],
+  "suspects": [
+    {
+      "id": "cida",
+      "name": "Dona Cida",
+      "desc": "Padeira. Liga os fornos às 4h da manhã, todo santo dia.",
+      "correct": false,
+      "rebuttal": "Os fornos ligam às 4h e a queda é às 3h, criatura! Inocente — e ainda faz o melhor pão da rua."
+    },
+    {
+      "id": "regina",
+      "name": "Síndica Regina",
+      "desc": "Cuida dos aluguéis da rua. Assinou os pedidos de ligação do sobrado.",
+      "correct": false,
+      "rebuttal": "Ela só assinou papelada. Burocracia não esquenta trafo a 96 graus."
+    },
+    {
+      "id": "morador_sobrado",
+      "name": "O morador do sobrado",
+      "desc": "Alugou há 3 meses, pediu três ligações novas e ninguém nunca o viu entrar ou sair.",
+      "correct": true
+    }
+  ],
+  "victory": {
+    "reveal": "Uma MINERADORA DE CRIPTOMOEDAS clandestina! Ele dividiu uma carga industrial em três ligações residenciais pra passar despercebido e rodava as máquinas na madrugada, quando a tarifa é mais barata. O trafo de 75 kVA não aguenta um bloco de 80 kW — e desarmava às 3h, levando o bairro junto.",
+    "lesson": "A curva de carga não mente: gente desenha vales e picos, máquina desenha retângulo. Carga industrial em rede residencial derruba o quarteirão inteiro — classificação e dimensionamento existem por isso."
+  }
+}

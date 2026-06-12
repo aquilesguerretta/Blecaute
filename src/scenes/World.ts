@@ -28,8 +28,8 @@ export class World extends Phaser.Scene {
     super('World');
   }
 
-  create(): void {
-    this.caseData = loadCase('case1');
+  create(data?: { caseId?: string }): void {
+    this.caseData = loadCase(data?.caseId ?? 'case1');
     const save = loadSave();
     this.state = save && save.caseId === this.caseData.id ? save : defaultSave(this.caseData.id);
     const built = buildWorld(this, this.caseData);

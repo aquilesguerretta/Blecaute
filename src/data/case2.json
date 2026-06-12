@@ -23,50 +23,52 @@
     }
   ],
   "world": {
-    "w": 800,
-    "h": 1200,
+    "w": 1100,
+    "h": 1650,
     "buildings": [
-      { "x": 80, "y": 200, "w": 170, "h": 120, "name": "Padaria da Cida", "spriteKey": "building_padaria" },
-      { "x": 560, "y": 150, "w": 160, "h": 110, "name": "Mercearia do Centro", "spriteKey": "building_centro_b" },
-      { "x": 540, "y": 480, "w": 160, "h": 160, "name": "Sobrado das Cortinas Pretas", "spriteKey": "building_sobrado" },
-      { "x": 90, "y": 560, "w": 160, "h": 140, "name": "Prédio Baixo", "spriteKey": "building_centro_a" },
-      { "x": 100, "y": 920, "w": 150, "h": 110, "name": "Salão da Regina", "spriteKey": "building_centro_b" },
-      { "x": 540, "y": 940, "w": 180, "h": 130, "name": "Oficina do Centro" }
+      { "x": 100, "y": 260, "w": 330, "h": 170, "name": "Padaria da Cida", "spriteKey": "building_padaria" },
+      { "x": 780, "y": 200, "w": 250, "h": 140, "name": "Mercearia do Centro", "spriteKey": "building_centro_b" },
+      { "x": 740, "y": 640, "w": 270, "h": 140, "name": "Sobrado das Cortinas Pretas", "spriteKey": "building_sobrado" },
+      { "x": 120, "y": 760, "w": 250, "h": 140, "name": "Prédio Baixo", "spriteKey": "building_centro_a" },
+      { "x": 140, "y": 1260, "w": 250, "h": 140, "name": "Salão da Regina", "spriteKey": "building_centro_b" },
+      { "x": 740, "y": 1290, "w": 240, "h": 160, "name": "Oficina do Centro" }
     ],
     "lights": [
-      { "x": 320, "y": 160 },
-      { "x": 70, "y": 420 },
-      { "x": 420, "y": 300 },
-      { "x": 620, "y": 440 },
-      { "x": 330, "y": 650 },
-      { "x": 470, "y": 650 },
-      { "x": 330, "y": 810 },
-      { "x": 470, "y": 810 },
-      { "x": 120, "y": 800 },
-      { "x": 600, "y": 1100 }
+      { "x": 440, "y": 220 },
+      { "x": 100, "y": 580 },
+      { "x": 580, "y": 410 },
+      { "x": 850, "y": 600 },
+      { "x": 460, "y": 760 },
+      { "x": 640, "y": 760 },
+      { "x": 460, "y": 1100 },
+      { "x": 640, "y": 1100 },
+      { "x": 160, "y": 1110 },
+      { "x": 820, "y": 1510 }
     ],
     "props": [
-      { "x": 360, "y": 598, "kind": "tree" },
-      { "x": 445, "y": 598, "kind": "tree" },
-      { "x": 300, "y": 706, "kind": "bush" },
-      { "x": 508, "y": 775, "kind": "bush" },
-      { "x": 745, "y": 330, "kind": "tree" },
-      { "x": 50, "y": 300, "kind": "tree" },
-      { "x": 740, "y": 760, "kind": "tree" },
-      { "x": 60, "y": 650, "kind": "rock" },
-      { "x": 280, "y": 880, "kind": "barrel" },
-      { "x": 700, "y": 1010, "kind": "tree" },
-      { "x": 150, "y": 1160, "kind": "bush" },
-      { "x": 420, "y": 1080, "kind": "rock" },
-      { "x": 620, "y": 300, "kind": "bush" }
+      { "x": 480, "y": 800, "kind": "tree" },
+      { "x": 620, "y": 800, "kind": "tree" },
+      { "x": 550, "y": 880, "kind": "bench" },
+      { "x": 420, "y": 960, "kind": "bush" },
+      { "x": 680, "y": 1060, "kind": "bush" },
+      { "x": 1020, "y": 450, "kind": "tree" },
+      { "x": 70, "y": 420, "kind": "tree" },
+      { "x": 1010, "y": 1040, "kind": "tree" },
+      { "x": 90, "y": 890, "kind": "rock" },
+      { "x": 380, "y": 1210, "kind": "barrel" },
+      { "x": 960, "y": 1390, "kind": "tree" },
+      { "x": 210, "y": 1590, "kind": "bush" },
+      { "x": 580, "y": 1480, "kind": "rock" },
+      { "x": 850, "y": 420, "kind": "bush" },
+      { "x": 150, "y": 1100, "kind": "hydrant" }
     ]
   },
   "npcs": [
     {
       "id": "cida",
       "name": "Dona Cida",
-      "x": 190,
-      "y": 360,
+      "x": 280,
+      "y": 510,
       "color": "#EF9F27",
       "dialogue": [
         "Todo mundo me olhando torto! SIM, meus fornos ligam às 4h da manhã. Padaria é isso.",
@@ -80,8 +82,8 @@
     {
       "id": "nando",
       "name": "Nando",
-      "x": 430,
-      "y": 700,
+      "x": 560,
+      "y": 1000,
       "color": "#378ADD",
       "dialogue": [
         "Eu rodo a cidade a noite inteira, conheço cada barulho.",
@@ -95,8 +97,8 @@
     {
       "id": "regina",
       "name": "Síndica Regina",
-      "x": 220,
-      "y": 1070,
+      "x": 300,
+      "y": 1470,
       "color": "#D4537E",
       "dialogue": [
         "O rapaz do sobrado? Quietinho, paga tudo em dia, alugou faz uns 3 meses.",
@@ -112,8 +114,8 @@
     {
       "id": "curva-ct07",
       "name": "Curva de carga · Alimentador CT-07",
-      "x": 450,
-      "y": 430,
+      "x": 620,
+      "y": 570,
       "dialogue": [
         "Curva de carga do alimentador, últimas 24h:",
         "Madrugada: um bloco CHAPADO de 80 kW, das 0h às 6h. Reto feito régua.",
@@ -127,8 +129,8 @@
     {
       "id": "trafo-quarteirao",
       "name": "Transformador do quarteirão",
-      "x": 500,
-      "y": 700,
+      "x": 660,
+      "y": 950,
       "dialogue": [
         "Trafo de 75 kVA · temperatura às 3h da manhã: 96°C.",
         "Três medidores novos no mesmo endereço, todos girando no talo, madrugada adentro.",
@@ -142,8 +144,8 @@
     {
       "id": "medidor-padaria",
       "name": "Medidor da padaria",
-      "x": 265,
-      "y": 250,
+      "x": 455,
+      "y": 390,
       "dialogue": [
         "Medidor da padaria · consumo alto, MAS o perfil é honesto:",
         "sobe às 4h com os fornos, desce às 10h. Pico de quem trabalha.",

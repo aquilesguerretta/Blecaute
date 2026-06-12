@@ -53,11 +53,13 @@ export class UIManager {
   private victoryDoneCb?: () => void;
 
   private canvas: HTMLCanvasElement;
+  private hasAsset: (key: string) => boolean;
   private ro: ResizeObserver;
   private syncFn: () => void;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, hasAsset: (key: string) => boolean) {
     this.canvas = canvas;
+    this.hasAsset = hasAsset;
     document.getElementById('ui-root')?.remove();
 
     this.root = el('div', '', document.body as HTMLElement);
@@ -159,8 +161,13 @@ export class UIManager {
   }
 
   showDialogue(page: DialoguePage, index: number, total: number): void {
-    this.dlgPortrait.style.background = page.color ?? '#39424e';
-    this.dlgPortrait.textContent = page.speaker.charAt(0).toUpperCase();
+    if (page.portraitKey && this.hasAsset(page.portraitKey)) {
+      this.dlgPortrait.style.background = `${page.color ?? '#10141f'} url('assets/${page.portraitKey}.png') center / cover no-repeat`;
+      this.dlgPortrait.textContent = '';
+    } else {
+      this.dlgPortrait.style.background = page.color ?? '#39424e';
+      this.dlgPortrait.textContent = page.speaker.charAt(0).toUpperCase();
+    }
     this.dlgName.textContent = page.speaker;
     this.dlgText.textContent = page.text;
     this.dlgPage.textContent = `${index + 1}/${total}`;

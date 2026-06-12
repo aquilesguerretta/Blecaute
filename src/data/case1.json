@@ -6,64 +6,68 @@
     {
       "speaker": "Saci",
       "color": "#B03A2E",
+      "portraitKey": "portrait_saci",
       "text": "Psiu! Aqui. É, EU, o Saci. Tão me culpando pelos apagões DE NOVO."
     },
     {
       "speaker": "Saci",
       "color": "#B03A2E",
+      "portraitKey": "portrait_saci",
       "text": "Eu faço travessura, moço — não crime. Me ajuda a achar o culpado de verdade?"
     },
     {
       "speaker": "Saci",
       "color": "#B03A2E",
+      "portraitKey": "portrait_saci",
       "text": "Fala com o povo, inspeciona os equipamentos. Eu anoto tudo no caderno. Com 3 pistas, volta em mim que a gente ACUSA."
     }
   ],
   "world": {
-    "w": 800,
-    "h": 1200,
+    "w": 1100,
+    "h": 1650,
     "buildings": [
-      { "x": 70, "y": 120, "w": 150, "h": 120, "name": "Casa da Dona Marta" },
-      { "x": 560, "y": 150, "w": 150, "h": 120, "name": "Casa do Seu Tonho" },
-      { "x": 80, "y": 520, "w": 170, "h": 130, "name": "Mercadinho da Vila" },
-      { "x": 540, "y": 560, "w": 120, "h": 100, "name": "Casa Amarela" },
-      { "x": 500, "y": 860, "w": 230, "h": 180, "name": "Galpão" },
-      { "x": 90, "y": 900, "w": 150, "h": 120, "name": "Casa do Kiko" }
+      { "x": 90, "y": 180, "w": 300, "h": 150, "name": "Casa da Dona Marta", "spriteKey": "building_casa_marta" },
+      { "x": 790, "y": 200, "w": 200, "h": 140, "name": "Casa do Seu Tonho" },
+      { "x": 110, "y": 700, "w": 310, "h": 170, "name": "Mercadinho da Vila", "spriteKey": "building_bar" },
+      { "x": 760, "y": 760, "w": 170, "h": 130, "name": "Casa Amarela" },
+      { "x": 660, "y": 1150, "w": 390, "h": 200, "name": "Galpão", "spriteKey": "building_galpao" },
+      { "x": 120, "y": 1240, "w": 200, "h": 150, "name": "Casa do Kiko" }
     ],
     "lights": [
-      { "x": 320, "y": 210 },
-      { "x": 60, "y": 410 },
-      { "x": 690, "y": 400 },
-      { "x": 400, "y": 500 },
-      { "x": 170, "y": 750 },
-      { "x": 620, "y": 740 },
-      { "x": 470, "y": 790 },
-      { "x": 300, "y": 1080 }
+      { "x": 440, "y": 290 },
+      { "x": 90, "y": 560 },
+      { "x": 950, "y": 540 },
+      { "x": 550, "y": 680 },
+      { "x": 240, "y": 1020 },
+      { "x": 860, "y": 1010 },
+      { "x": 560, "y": 1090 },
+      { "x": 420, "y": 1480 }
     ],
     "props": [
-      { "x": 350, "y": 120, "kind": "tree" },
-      { "x": 40, "y": 260, "kind": "tree" },
-      { "x": 745, "y": 240, "kind": "tree" },
-      { "x": 280, "y": 430, "kind": "tree" },
-      { "x": 520, "y": 430, "kind": "bush" },
-      { "x": 710, "y": 620, "kind": "tree" },
-      { "x": 140, "y": 690, "kind": "bush" },
-      { "x": 420, "y": 650, "kind": "rock" },
-      { "x": 755, "y": 950, "kind": "tree" },
-      { "x": 55, "y": 1010, "kind": "tree" },
-      { "x": 330, "y": 940, "kind": "barrel" },
-      { "x": 680, "y": 1130, "kind": "bush" },
-      { "x": 205, "y": 345, "kind": "bush" },
-      { "x": 640, "y": 310, "kind": "rock" },
-      { "x": 380, "y": 1140, "kind": "tree" }
+      { "x": 480, "y": 170, "kind": "tree" },
+      { "x": 60, "y": 380, "kind": "tree" },
+      { "x": 1030, "y": 330, "kind": "tree" },
+      { "x": 380, "y": 590, "kind": "tree" },
+      { "x": 710, "y": 590, "kind": "bush" },
+      { "x": 980, "y": 860, "kind": "tree" },
+      { "x": 190, "y": 950, "kind": "bush" },
+      { "x": 580, "y": 900, "kind": "rock" },
+      { "x": 1040, "y": 1310, "kind": "tree" },
+      { "x": 80, "y": 1390, "kind": "tree" },
+      { "x": 450, "y": 1290, "kind": "barrel" },
+      { "x": 940, "y": 1560, "kind": "bush" },
+      { "x": 280, "y": 470, "kind": "bush" },
+      { "x": 880, "y": 420, "kind": "rock" },
+      { "x": 520, "y": 1570, "kind": "tree" },
+      { "x": 760, "y": 1346, "kind": "doorglow" }
     ]
   },
   "npcs": [
     {
       "id": "marta",
       "name": "Dona Marta",
-      "x": 200,
-      "y": 300,
+      "x": 270,
+      "y": 420,
       "color": "#D4537E",
       "dialogue": [
         "Toda noite, 19h em ponto, a luz da vila CAI. Panela no fogo, novela começando... puf!",
@@ -77,8 +81,8 @@
     {
       "id": "tonho",
       "name": "Seu Tonho",
-      "x": 600,
-      "y": 330,
+      "x": 860,
+      "y": 430,
       "color": "#378ADD",
       "dialogue": [
         "O poste perto do galpão zumbe que nem marimbondo no fim da tarde. E esquenta!",
@@ -88,8 +92,8 @@
     {
       "id": "kiko",
       "name": "Kiko",
-      "x": 280,
-      "y": 720,
+      "x": 460,
+      "y": 1000,
       "color": "#97C459",
       "dialogue": [
         "O moço do galpão liga um montão de máquina toda noitinha!",
@@ -105,8 +109,8 @@
     {
       "id": "trafo-va03",
       "name": "Transformador VA-03",
-      "x": 470,
-      "y": 830,
+      "x": 600,
+      "y": 1180,
       "dialogue": [
         "TRAFO VA-03 · leitura das 19h: carga 142% (!!)",
         "Ligações registradas: 4. Cabos saindo do poste: ...5.",
@@ -120,8 +124,8 @@
     {
       "id": "medidor-galpao",
       "name": "Medidor do Galpão",
-      "x": 560,
-      "y": 1065,
+      "x": 760,
+      "y": 1390,
       "dialogue": [
         "Consumo do mês: 9 kWh. Menos que uma geladeira velha.",
         "Lá dentro: barulho de máquina pesada."
@@ -134,8 +138,8 @@
     {
       "id": "medidor-marta",
       "name": "Medidor da Marta",
-      "x": 248,
-      "y": 212,
+      "x": 410,
+      "y": 300,
       "dialogue": [
         "160 kWh — normal.",
         "Aviso na fatura: 'perdas da rede são rateadas na tarifa de todos.'",

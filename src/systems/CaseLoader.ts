@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import case1 from '../data/case1.json';
 import case2 from '../data/case2.json';
 import type { Case, InspectableDef, LightDef, NpcDef } from '../data/schema';
-import { DEPTHS, LIGHTS, WORLD_COLORS } from '../config';
+import { CHIBI, DEPTHS, LIGHTS, SPRITE_ALIASES, WORLD_COLORS } from '../config';
 
 // Registro de casos disponíveis. Novos casos: importar o JSON e listar aqui.
 const CASES: Record<string, unknown> = { case1, case2 };
@@ -58,11 +58,15 @@ export interface BuiltWorld {
   inspectables: SpawnedInspectable[];
 }
 
+// placeholders por kind quando não existe asset prop_<kind>
 const PROP_TEX: Record<string, string> = {
   tree: 'tex-tree',
   bush: 'tex-bush',
   rock: 'tex-rock',
   barrel: 'tex-barrel',
+  bench: 'tex-barrel',
+  crate: 'tex-barrel',
+  hydrant: 'tex-device',
 };
 
 interface LabelOpts {
@@ -117,14 +121,18 @@ function npcTexture(scene: Phaser.Scene, id: string, colorHex: string): string {
 export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
   const { w, h } = c.world;
 
-  // chão + pontilhado sutil de grama (padrão determinístico)
-  scene.add.rectangle(w / 2, h / 2, w, h, WORLD_COLORS.ground).setDepth(DEPTHS.ground);
-  const deco = scene.add.graphics().setDepth(DEPTHS.deco);
-  deco.fillStyle(WORLD_COLORS.groundDot, 1);
-  for (let y = 40; y < h; y += 88) {
-    const offset = ((y / 88) % 2) * 44;
-    for (let x = 40 + offset; x < w; x += 88) {
-      deco.fillCircle(x, y, 3);
+  // chão: tile de arte se existir; senão cor chapada + pontilhado
+  if (scene.textures.exists('ground_vila')) {
+    scene.add.tileSprite(w / 2, h / 2, w, h, 'ground_vila').setDepth(DEPTHS.ground);
+  } else {
+    scene.add.rectangle(w / 2, h / 2, w, h, WORLD_COLORS.ground).setDepth(DEPTHS.ground);
+    const deco = scene.add.graphics().setDepth(DEPTHS.deco);
+    deco.fillStyle(WORLD_COLORS.groundDot, 1);
+    for (let y = 40; y < h; y += 88) {
+      const offset = ((y / 88) % 2) * 44;
+      for (let x = 40 + offset; x < w; x += 88) {
+        deco.fillCircle(x, y, 3);
+      }
     }
   }
   scene.add
@@ -132,53 +140,82 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
     .setStrokeStyle(3, WORLD_COLORS.border, 1)
     .setDepth(DEPTHS.deco);
 
-  // prédios: sprite único (retângulo placeholder) + corpo estático AABB
+  // prédios: arte ancorada na base + colisor AABB do JSON (a base, não o telhado)
   const colliders: Phaser.GameObjects.Rectangle[] = [];
   for (const b of c.world.buildings) {
     const cx = b.x + b.w / 2;
     const cy = b.y + b.h / 2;
-    const base = scene.add
-      .rectangle(cx, cy, b.w, b.h, WORLD_COLORS.building)
-      .setStrokeStyle(2, WORLD_COLORS.buildingLine, 1)
-      .setDepth(b.y + b.h);
-    scene.add
-      .rectangle(cx, cy - 8, b.w - 16, b.h - 26, WORLD_COLORS.buildingTop)
-      .setDepth(b.y + b.h + 0.5);
-    scene.physics.add.existing(base, true);
-    colliders.push(base);
-    addLabel(scene, cx, cy, b.name, b.y + b.h + 1, { size: 13, wrap: b.w - 14, middle: true });
+    const baseY = b.y + b.h;
+    const hasArt = !!(b.spriteKey && scene.textures.exists(b.spriteKey));
+    let collider: Phaser.GameObjects.Rectangle;
+    if (hasArt) {
+      const img = scene.add.image(cx, baseY, b.spriteKey!).setOrigin(0.5, 1).setDepth(baseY);
+      collider = scene.add.rectangle(cx, cy, b.w, b.h); // invisível, só física
+      addLabel(scene, cx, baseY - img.displayHeight - 6, b.name, baseY + 1, {
+        size: 13,
+        wrap: b.w + 40,
+      });
+    } else {
+      collider = scene.add
+        .rectangle(cx, cy, b.w, b.h, WORLD_COLORS.building)
+        .setStrokeStyle(2, WORLD_COLORS.buildingLine, 1)
+        .setDepth(baseY);
+      scene.add
+        .rectangle(cx, cy - 8, b.w - 16, b.h - 26, WORLD_COLORS.buildingTop)
+        .setDepth(baseY + 0.5);
+      addLabel(scene, cx, cy, b.name, baseY + 1, { size: 13, wrap: b.w - 14, middle: true });
+    }
+    scene.physics.add.existing(collider, true);
+    colliders.push(collider);
   }
 
-  // props decorativos
+  // props decorativos (asset prop_<kind> com fallback de placeholder)
   for (const p of c.world.props) {
-    const key = PROP_TEX[p.kind] ?? 'tex-rock';
+    if (p.kind === 'doorglow') {
+      const glow = scene.add.rectangle(p.x, p.y, 8, 4, 0xffa726).setDepth(p.y + 1);
+      scene.tweens.add({
+        targets: glow,
+        alpha: { from: 0.3, to: 0.7 },
+        duration: 800,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.InOut',
+      });
+      continue;
+    }
+    const artKey = `prop_${p.kind}`;
+    const key = scene.textures.exists(artKey) ? artKey : (PROP_TEX[p.kind] ?? 'tex-rock');
     scene.add.image(p.x, p.y, key).setOrigin(0.5, 1).setDepth(p.y);
   }
 
   // postes de luz com flicker (param de piscar quando o caso é resolvido)
   const lights = new LightField(scene, c.world.lights);
 
-  // NPCs
+  // NPCs: chibi de arte (chibi_<id> ou alias) com fallback de círculo colorido
   const npcs: SpawnedNpc[] = [];
   for (const n of c.npcs) {
-    const obj = scene.add.image(n.x, n.y, npcTexture(scene, n.id, n.color)).setDepth(n.y + 15);
+    const chibiKey = SPRITE_ALIASES[n.id] ?? `chibi_${n.id}`;
+    const key = scene.textures.exists(chibiKey) ? chibiKey : npcTexture(scene, n.id, n.color);
+    const obj = scene.add.image(n.x, n.y, key).setOrigin(0.5, 1).setDepth(n.y);
     scene.tweens.add({
       targets: obj,
-      scale: { from: 1, to: 1.06 },
-      duration: 900,
+      y: n.y - CHIBI.bobPx,
+      duration: CHIBI.bobMs,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.InOut',
     });
-    addLabel(scene, n.x, n.y - 20, n.name, n.y + 16, { size: 14 });
+    addLabel(scene, n.x, n.y - obj.displayHeight - 8, n.name, n.y + 1, { size: 14 });
     npcs.push({ def: n, obj });
   }
 
-  // inspecionáveis
+  // inspecionáveis: asset via alias/prop_<id>, fallback device placeholder
   const inspectables: SpawnedInspectable[] = [];
   for (const i of c.inspectables) {
-    const obj = scene.add.image(i.x, i.y, 'tex-device').setOrigin(0.5, 1).setDepth(i.y);
-    addLabel(scene, i.x, i.y - 36, i.name, i.y + 1, { size: 14, wrap: 130 });
+    const artKey = SPRITE_ALIASES[i.id] ?? `prop_${i.id}`;
+    const key = scene.textures.exists(artKey) ? artKey : 'tex-device';
+    const obj = scene.add.image(i.x, i.y, key).setOrigin(0.5, 1).setDepth(i.y);
+    addLabel(scene, i.x, i.y - obj.displayHeight - 6, i.name, i.y + 1, { size: 14, wrap: 150 });
     inspectables.push({ def: i, obj });
   }
 
@@ -199,11 +236,16 @@ export class LightField {
 
   constructor(scene: Phaser.Scene, defs: LightDef[]) {
     this.scene = scene;
+    const hasArt = scene.textures.exists('prop_lamppost');
     for (const d of defs) {
-      scene.add.image(d.x, d.y, 'tex-pole').setOrigin(0.5, 1).setDepth(d.y);
-      const lamp = scene.add.image(d.x, d.y - 30, 'tex-lamp').setDepth(d.y);
+      const post = scene.add
+        .image(d.x, d.y, hasArt ? 'prop_lamppost' : 'tex-pole')
+        .setOrigin(0.5, 1)
+        .setDepth(d.y);
+      const lampY = d.y - post.displayHeight + (hasArt ? 10 : 6);
+      const lamp = scene.add.image(d.x, lampY, 'tex-lamp').setDepth(d.y);
       const glow = scene.add
-        .image(d.x, d.y - 30, 'tex-glow')
+        .image(d.x, lampY, 'tex-glow')
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(DEPTHS.glow);
       const p: LightParts = { lamp, glow };

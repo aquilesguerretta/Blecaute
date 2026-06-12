@@ -5,6 +5,8 @@ export interface DialoguePage {
   text: string;
   /** Cor do retrato placeholder (hex CSS, ex.: "#D4537E"). */
   color?: string;
+  /** Asset de retrato (em /public/assets); se ausente/não carregado, usa a cor. */
+  portraitKey?: string;
 }
 
 export interface ClueDef {

@@ -41,8 +41,14 @@ export class World extends Phaser.Scene {
     const { w, h } = this.caseData.world;
     this.physics.world.setBounds(0, 0, w, h);
 
-    this.player = this.physics.add.image(w / 2, h / 2, 'tex-player');
-    this.player.body.setSize(PLAYER.bodySize, PLAYER.bodySize);
+    const playerKey = this.textures.exists('chibi_jogador') ? 'chibi_jogador' : 'tex-player';
+    this.player = this.physics.add.image(w / 2, h / 2, playerKey).setOrigin(0.5, 1);
+    // corpo AABB nos pés do chibi (origem é a base do sprite)
+    this.player.body.setSize(PLAYER.bodyW, PLAYER.bodyH);
+    this.player.body.setOffset(
+      (this.player.width - PLAYER.bodyW) / 2,
+      this.player.height - PLAYER.bodyH,
+    );
     this.player.setCollideWorldBounds(true);
     this.physics.add.collider(this.player, built.colliders);
 
@@ -53,7 +59,7 @@ export class World extends Phaser.Scene {
 
     this.joystick = new VirtualJoystick(this);
 
-    this.ui = new UIManager(this.game.canvas);
+    this.ui = new UIManager(this.game.canvas, (key) => this.textures.exists(key));
     this.ui.setTitle(this.caseData.title);
     this.dialogue = new DialogueSystem(this.ui);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.ui.destroy());
@@ -127,7 +133,13 @@ export class World extends Phaser.Scene {
   }
 
   private talkToNpc(def: NpcDef): void {
-    const pages = def.dialogue.map((text) => ({ speaker: def.name, text, color: def.color }));
+    const portraitKey = def.portraitKey ?? `portrait_${def.id}`;
+    const pages = def.dialogue.map((text) => ({
+      speaker: def.name,
+      text,
+      color: def.color,
+      portraitKey,
+    }));
     this.dialogue.open(pages, () => this.collectClue(def.clue));
   }
 
@@ -147,7 +159,12 @@ export class World extends Phaser.Scene {
   }
 
   private saciPage(text: string): DialoguePage {
-    return { speaker: COMPANION.name, text, color: COMPANION.portrait };
+    return {
+      speaker: COMPANION.name,
+      text,
+      color: COMPANION.portrait,
+      portraitKey: 'portrait_saci',
+    };
   }
 
   private talkToSaci(): void {
@@ -227,8 +244,11 @@ export class World extends Phaser.Scene {
       this.player.setVelocity(0, 0);
     } else {
       this.player.setVelocity(v.x * PLAYER.speed, v.y * PLAYER.speed);
+      if (Math.abs(v.x) > 0.1) {
+        this.player.setFlipX(v.x < 0);
+      }
     }
-    this.player.setDepth(this.player.y + 12);
+    this.player.setDepth(this.player.y);
     this.saci.update(delta, this.player.x, this.player.y);
     this.joystick.update();
     this.refreshInteract(modal);

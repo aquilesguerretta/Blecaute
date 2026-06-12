@@ -11,12 +11,34 @@ export class Boot extends Phaser.Scene {
     super('Boot');
   }
 
+  preload(): void {
+    // o manifest é regravado pelo npm run assets com o que existe na pasta
+    this.load.json('asset-manifest', 'assets/manifest.json');
+  }
+
   create(): void {
     this.makePlayer();
     this.makeSaci();
     this.makeLightParts();
     this.makeProps();
     this.makeDevice();
+
+    const manifest = this.cache.json.get('asset-manifest') as unknown;
+    const keys = Array.isArray(manifest)
+      ? manifest.filter((k): k is string => typeof k === 'string')
+      : [];
+    for (const key of keys) {
+      this.load.image(key, `assets/${key}.png`);
+    }
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => this.route());
+    if (keys.length > 0) {
+      this.load.start();
+    } else {
+      this.route();
+    }
+  }
+
+  private route(): void {
     this.scene.start('World', { caseId: caseIdFromQuery() ?? 'case1' });
   }
 

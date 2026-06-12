@@ -8,8 +8,9 @@ export const GAME = {
 } as const;
 
 export const PLAYER = {
-  speed: 175, // px/s
-  bodySize: 22, // lado do AABB de colisão
+  speed: 200, // px/s
+  bodyW: 20, // AABB de colisão (pés)
+  bodyH: 16,
   texSize: 28,
 } as const;
 
@@ -39,7 +40,7 @@ export const COMPANION = {
 } as const;
 
 export const INTERACT = {
-  radius: 46, // raio de proximidade de NPCs/inspecionáveis
+  radius: 52, // raio de proximidade de NPCs/inspecionáveis
   inspectPortrait: '#2e6f78',
 } as const;
 
@@ -112,3 +113,71 @@ export const STRINGS = {
 } as const;
 
 export const SAVE_KEY = 'blecaute.save.v1';
+
+// ===== Pipeline de assets (scripts/process-assets.mjs lê este mapa) =====
+// Largura-alvo (px) por nome de arquivo em /raw. Altura segue o aspect ratio.
+export const ASSET_WIDTHS: Record<string, number> = {
+  building_casa_marta: 300,
+  building_galpao: 380,
+  building_bar: 320,
+  building_padaria: 340,
+  building_sobrado: 280,
+  building_centro_a: 260,
+  building_centro_b: 260,
+  prop_poste_trafo: 140,
+  prop_medidor: 44,
+  // chibis: largura pequena — a arte é alta (ratio ~1:2); altura final ~46px
+  chibi_jogador: 22,
+  chibi_saci: 20,
+  chibi_marta: 21,
+  chibi_tonho: 21,
+  chibi_kiko: 18,
+  chibi_cida: 21,
+  chibi_nando: 21,
+  chibi_regina: 21,
+  portrait_saci: 256,
+  portrait_marta: 256,
+  portrait_tonho: 256,
+  portrait_kiko: 256,
+  portrait_agente: 256,
+  portrait_cida: 256,
+  portrait_nando: 256,
+  portrait_regina: 256,
+  portrait_morador: 256,
+  prop_tree: 84,
+  prop_bench: 64,
+  prop_crate: 40,
+  prop_hydrant: 30,
+  prop_lamppost: 56,
+  ground_vila: 512,
+  logo_blecaute: 320,
+  keyart_title: 780,
+  cuca_teaser: 256,
+  card_solar: 220,
+  card_eolica: 220,
+  card_termica: 220,
+  icon_notebook: 64,
+  icon_speech: 64,
+  icon_magnifier: 64,
+  icon_warning: 64,
+  icon_battery: 64,
+  icon_star: 64,
+  ui_tablet: 512,
+};
+
+export const DEFAULT_ASSET_WIDTH = 256;
+
+// Ids de entidades cujo asset não segue a convenção chibi_<id> / prop_<id>.
+export const SPRITE_ALIASES: Record<string, string> = {
+  'trafo-va03': 'prop_poste_trafo',
+  'trafo-quarteirao': 'prop_poste_trafo',
+  'medidor-galpao': 'prop_medidor',
+  'medidor-marta': 'prop_medidor',
+  'medidor-padaria': 'prop_medidor',
+  'curva-ct07': 'prop_medidor',
+};
+
+export const CHIBI = {
+  bobPx: 2, // amplitude do idle bob
+  bobMs: 800,
+} as const;

@@ -9,7 +9,8 @@ export class Companion {
   readonly obj: Phaser.GameObjects.Image;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    this.obj = scene.add.image(x, y, 'tex-saci');
+    const key = scene.textures.exists('chibi_saci') ? 'chibi_saci' : 'tex-saci';
+    this.obj = scene.add.image(x, y, key).setOrigin(0.5, 1);
     scene.tweens.add({
       targets: this.obj,
       scale: { from: 1, to: 1.07 },
@@ -42,6 +43,6 @@ export class Companion {
         this.obj.setFlipX(dx < 0);
       }
     }
-    this.obj.setDepth(this.obj.y + 14);
+    this.obj.setDepth(this.obj.y);
   }
 }

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import type { Case, ClueDef, InspectableDef, NpcDef } from '../data/schema';
-import { CAMERA, INTERACT, PLAYER, STRINGS } from '../config';
-import { buildWorld, clueIndex, loadCase } from '../systems/CaseLoader';
+import type { Case, ClueDef, DialoguePage, InspectableDef, NpcDef } from '../data/schema';
+import { CAMERA, COMPANION, INTERACT, PLAYER, STRINGS } from '../config';
+import { buildWorld, clueIndex, loadCase, type LightField } from '../systems/CaseLoader';
 import { ClueJournal } from '../systems/ClueJournal';
 import { Companion } from '../systems/Companion';
 import { DialogueSystem } from '../systems/DialogueSystem';
@@ -22,6 +22,7 @@ export class World extends Phaser.Scene {
   private lastInteractLabel: string | null = null;
   private journal!: ClueJournal;
   private state!: SaveData;
+  private lightField!: LightField;
 
   constructor() {
     super('World');
@@ -32,6 +33,10 @@ export class World extends Phaser.Scene {
     const save = loadSave();
     this.state = save && save.caseId === this.caseData.id ? save : defaultSave(this.caseData.id);
     const built = buildWorld(this, this.caseData);
+    this.lightField = built.lights;
+    if (this.state.solved) {
+      this.lightField.solve(false);
+    }
 
     const { w, h } = this.caseData.world;
     this.physics.world.setBounds(0, 0, w, h);
@@ -87,6 +92,17 @@ export class World extends Phaser.Scene {
         action: () => this.inspect(def),
       });
     }
+    this.interactables.add({
+      id: 'companion',
+      kind: 'companion',
+      radius: COMPANION.interactRadius,
+      getXY: () => ({ x: this.saci.x, y: this.saci.y }),
+      label: () =>
+        !this.state.solved && this.journal.count >= this.caseData.minClues
+          ? STRINGS.accuse
+          : STRINGS.talkCompanion,
+      action: () => this.talkToSaci(),
+    });
     this.ui.onInteract = () => this.currentInteract?.action();
 
     if (!this.state.introSeen) {
@@ -116,6 +132,56 @@ export class World extends Phaser.Scene {
     if (clue && this.journal.add(clue)) {
       this.ui.toast(STRINGS.clueAdded);
     }
+  }
+
+  private saciPage(text: string): DialoguePage {
+    return { speaker: COMPANION.name, text, color: COMPANION.portrait };
+  }
+
+  private talkToSaci(): void {
+    if (this.state.solved) {
+      // recapitula a solução depois do caso fechado
+      this.dialogue.open([
+        this.saciPage(this.caseData.victory.reveal),
+        this.saciPage(this.caseData.victory.lesson),
+      ]);
+      return;
+    }
+    if (this.journal.count >= this.caseData.minClues) {
+      this.openAccusation();
+      return;
+    }
+    this.dialogue.open([
+      this.saciPage(STRINGS.saciHint(this.journal.count, this.caseData.minClues)),
+    ]);
+  }
+
+  private openAccusation(): void {
+    this.ui.showAccuse(
+      this.caseData.suspects,
+      (id) => this.resolveAccusation(id),
+      () => this.ui.hideAccuse(),
+    );
+  }
+
+  private resolveAccusation(id: string): void {
+    const suspect = this.caseData.suspects.find((s) => s.id === id);
+    this.ui.hideAccuse();
+    if (!suspect) {
+      return;
+    }
+    if (!suspect.correct) {
+      this.dialogue.open([this.saciPage(suspect.rebuttal ?? STRINGS.rebuttalFallback)]);
+      return;
+    }
+    this.dialogue.open([this.saciPage(this.caseData.victory.reveal)], () => {
+      this.state.solved = true;
+      this.persist();
+      this.lightField.solve(true);
+      this.ui.showVictory(this.caseData.title, this.caseData.victory.lesson, () =>
+        this.ui.toast(STRINGS.solvedToast),
+      );
+    });
   }
 
   private persist(): void {

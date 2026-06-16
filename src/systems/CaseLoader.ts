@@ -14,6 +14,7 @@ import {
   SPRITE_ALIASES,
   WORLD_COLORS,
 } from '../config';
+import { addContactShadow, type ContactShadow } from './Shadow';
 
 // Registro de casos disponíveis. Novos casos: importar o JSON e listar aqui.
 const CASES: Record<string, unknown> = { case1, case2 };
@@ -55,6 +56,8 @@ export function clueIndex(c: Case): Map<string, string> {
 export interface SpawnedNpc {
   def: NpcDef;
   obj: Phaser.GameObjects.Image;
+  shadow: ContactShadow;
+  baseY: number;
 }
 
 export interface SpawnedInspectable {
@@ -194,6 +197,7 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
       // a base cobre o footprint — não usar altura-alvo aqui (criaria paredes
       // invisíveis quando a arte ficasse mais estreita que o colisor).
       const img = scene.add.image(cx, baseY, b.spriteKey!).setOrigin(0.5, 1).setDepth(baseY);
+      addContactShadow(scene, img); // cola o prédio ao chão
       collider = scene.add.rectangle(cx, cy, b.w, b.h); // invisível, só física
       addLabel(scene, cx, baseY - img.displayHeight - 6, b.name, baseY + 1, {
         size: 13,
@@ -207,6 +211,7 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
       scene.add
         .rectangle(cx, cy - 8, b.w - 16, b.h - 26, WORLD_COLORS.buildingTop)
         .setDepth(baseY + 0.5);
+      addContactShadow(scene, { x: cx, y: baseY, displayWidth: b.w, depth: baseY });
       addLabel(scene, cx, cy, b.name, baseY + 1, { size: 13, wrap: b.w - 14, middle: true });
     }
     scene.physics.add.existing(collider, true);
@@ -244,6 +249,7 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
     const key = hasChibi ? chibiKey : npcTexture(scene, n.id, n.color);
     const obj = scene.add.image(n.x, n.y, key).setOrigin(0.5, 1).setDepth(n.y);
     fitHeight(obj, hasChibi ? heightFor(chibiKey, DEFAULT_CHIBI_HEIGHT) : DEFAULT_CHIBI_HEIGHT);
+    const shadow = addContactShadow(scene, obj); // sombra no chão, encolhe no bob
     scene.tweens.add({
       targets: obj,
       y: n.y - CHIBI.bobPx,
@@ -253,7 +259,7 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
       ease: 'Sine.InOut',
     });
     addLabel(scene, n.x, n.y - obj.displayHeight - 8, n.name, n.y + 1, { size: 14 });
-    npcs.push({ def: n, obj });
+    npcs.push({ def: n, obj, shadow, baseY: n.y });
   }
 
   // inspecionáveis: asset via alias/prop_<id>, fallback device placeholder

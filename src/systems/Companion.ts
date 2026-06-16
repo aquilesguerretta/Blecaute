@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { ASSET_HEIGHTS, COMPANION, DEFAULT_CHIBI_HEIGHT } from '../config';
+import { addContactShadow, type ContactShadow } from './Shadow';
 
 /**
  * Companheiro (Saci): segue o player com atraso, parando a uma distância
@@ -7,6 +8,7 @@ import { ASSET_HEIGHTS, COMPANION, DEFAULT_CHIBI_HEIGHT } from '../config';
  */
 export class Companion {
   readonly obj: Phaser.GameObjects.Image;
+  private shadow: ContactShadow;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     const hasChibi = scene.textures.exists('chibi_saci');
@@ -16,6 +18,7 @@ export class Companion {
     const targetH = hasChibi ? (ASSET_HEIGHTS.chibi_saci ?? DEFAULT_CHIBI_HEIGHT) : this.obj.height;
     const s = this.obj.height ? targetH / this.obj.height : 1;
     this.obj.setScale(s);
+    this.shadow = addContactShadow(scene, this.obj);
     scene.tweens.add({
       targets: this.obj,
       scale: { from: s, to: s * 1.06 },
@@ -39,7 +42,8 @@ export class Companion {
     const dx = targetX - this.obj.x;
     const dy = targetY - this.obj.y;
     const dist = Math.hypot(dx, dy);
-    if (dist > COMPANION.followDist) {
+    const moving = dist > COMPANION.followDist;
+    if (moving) {
       const speed = Math.min(COMPANION.maxSpeed, (dist - COMPANION.followDist) * COMPANION.gain);
       const step = Math.min(speed * dt, dist - COMPANION.followDist);
       this.obj.x += (dx / dist) * step;
@@ -49,5 +53,6 @@ export class Companion {
       }
     }
     this.obj.setDepth(this.obj.y);
+    this.shadow.follow(this.obj.x, this.obj.y, moving ? 0.94 : 1);
   }
 }

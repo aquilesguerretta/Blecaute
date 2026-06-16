@@ -3,6 +3,7 @@ import type { Case, ClueDef, DialoguePage, InspectableDef, NpcDef } from '../dat
 import {
   ASSET_HEIGHTS,
   CAMERA,
+  CHIBI,
   COMPANION,
   DEFAULT_CHIBI_HEIGHT,
   EXPANSIONS,
@@ -12,6 +13,8 @@ import {
   isDesktopPointer,
   worldZoom,
 } from '../config';
+import { addContactShadow, type ContactShadow } from '../systems/Shadow';
+import { type SpawnedNpc } from '../systems/CaseLoader';
 import { ExpansionCard } from '../ui/ExpansionCard';
 
 /** Move `current` em direção a `target` no máximo `maxDelta` (ease linear). */
@@ -55,6 +58,8 @@ export class World extends Phaser.Scene {
   private caseId!: string;
   private lightField!: LightField;
   private expansion: ExpansionCard | null = null;
+  private playerShadow!: ContactShadow;
+  private npcs: SpawnedNpc[] = [];
 
   constructor() {
     super('World');
@@ -71,6 +76,7 @@ export class World extends Phaser.Scene {
     this.cameras.main.fadeIn(250, 5, 6, 10);
     const built = buildWorld(this, this.caseData);
     this.lightField = built.lights;
+    this.npcs = built.npcs;
     if (this.prog.solved) {
       this.lightField.solve(false);
     }
@@ -95,6 +101,7 @@ export class World extends Phaser.Scene {
     this.player.body.setOffset((fw - bw) / 2, fh - bh);
     this.player.setCollideWorldBounds(true);
     this.physics.add.collider(this.player, built.colliders);
+    this.playerShadow = addContactShadow(this, this.player);
 
     this.cameras.main.setBounds(0, 0, w, h);
     this.cameras.main.startFollow(this.player, true, CAMERA.lerp, CAMERA.lerp);
@@ -359,7 +366,7 @@ export class World extends Phaser.Scene {
     }
   }
 
-  update(_time: number, delta: number): void {
+  update(time: number, delta: number): void {
     const dt = delta / 1000;
     const modal = this.ui.isModalOpen() || this.expansion !== null;
     this.joystick.setEnabled(!modal);
@@ -391,6 +398,15 @@ export class World extends Phaser.Scene {
     this.saci.update(delta, this.player.x, this.player.y);
     this.joystick.update();
     this.refreshInteract(modal);
+
+    // sombras de contato: player pulsa com a passada, NPCs encolhem no bob
+    const moving = Math.hypot(body.velocity.x, body.velocity.y) > 20;
+    const pulse = moving ? 1 - 0.06 * (0.5 + 0.5 * Math.sin(time * 0.018)) : 1;
+    this.playerShadow.follow(this.player.x, this.player.y, pulse);
+    for (const n of this.npcs) {
+      const lift = Math.max(0, Math.min(1, (n.baseY - n.obj.y) / CHIBI.bobPx));
+      n.shadow.follow(n.obj.x, n.baseY, 1 - 0.08 * lift);
+    }
 
     // desktop: E/Espaço dispara a ação contextual atual
     if (!modal && this.currentInteract && this.joystick.interactPressed()) {

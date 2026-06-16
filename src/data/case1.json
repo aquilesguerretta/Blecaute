@@ -27,11 +27,11 @@
     "h": 1650,
     "buildings": [
       { "x": 90, "y": 180, "w": 300, "h": 150, "name": "Casa da Dona Marta", "spriteKey": "building_casa_marta" },
-      { "x": 790, "y": 200, "w": 200, "h": 140, "name": "Casa do Seu Tonho" },
+      { "x": 790, "y": 200, "w": 200, "h": 140, "name": "Casa do Seu Tonho", "spriteKey": "building_centro_a" },
       { "x": 110, "y": 700, "w": 310, "h": 170, "name": "Mercadinho da Vila", "spriteKey": "building_bar" },
-      { "x": 760, "y": 760, "w": 170, "h": 130, "name": "Casa Amarela" },
+      { "x": 760, "y": 760, "w": 170, "h": 130, "name": "Casa Amarela", "spriteKey": "building_centro_b" },
       { "x": 660, "y": 1150, "w": 390, "h": 200, "name": "Galpão", "spriteKey": "building_galpao" },
-      { "x": 120, "y": 1240, "w": 200, "h": 150, "name": "Casa do Kiko" }
+      { "x": 120, "y": 1240, "w": 200, "h": 150, "name": "Casa do Kiko", "spriteKey": "building_sobrado" }
     ],
     "lights": [
       { "x": 440, "y": 290 },

@@ -2,7 +2,18 @@ import Phaser from 'phaser';
 import case1 from '../data/case1.json';
 import case2 from '../data/case2.json';
 import type { Case, InspectableDef, LightDef, NpcDef } from '../data/schema';
-import { CHIBI, DEPTHS, LIGHTS, SPRITE_ALIASES, WORLD_COLORS } from '../config';
+import {
+  ASSET_HEIGHTS,
+  CHIBI,
+  DEFAULT_CHIBI_HEIGHT,
+  DEFAULT_PROP_HEIGHT,
+  DEPTHS,
+  KIND_ART,
+  KIND_HEIGHT,
+  LIGHTS,
+  SPRITE_ALIASES,
+  WORLD_COLORS,
+} from '../config';
 
 // Registro de casos disponíveis. Novos casos: importar o JSON e listar aqui.
 const CASES: Record<string, unknown> = { case1, case2 };
@@ -69,6 +80,22 @@ const PROP_TEX: Record<string, string> = {
   hydrant: 'tex-device',
 };
 
+/**
+ * Redimensiona a imagem para uma altura-alvo (px de mundo) preservando o
+ * aspect ratio. A arte vem em alta resolução e é reduzida aqui — único
+ * lugar que define o tamanho na tela, então proporções ficam coerentes.
+ */
+function fitHeight(img: Phaser.GameObjects.Image, targetH: number): void {
+  if (!targetH || !img.height) {
+    return;
+  }
+  img.setDisplaySize(img.width * (targetH / img.height), targetH);
+}
+
+function heightFor(key: string, fallback: number): number {
+  return ASSET_HEIGHTS[key] ?? fallback;
+}
+
 interface LabelOpts {
   size: number;
   wrap?: number;
@@ -100,19 +127,33 @@ function addLabel(
   return t;
 }
 
-/** Textura de NPC já na cor certa (tint não é confiável no renderer Canvas). */
+/**
+ * Placeholder de NPC quando não há arte de chibi: uma figurinha (corpo +
+ * cabeça) na cor do personagem — lê como "pessoa", não como bolha chapada
+ * (tint não é confiável no renderer Canvas, por isso desenhamos colorido).
+ */
 function npcTexture(scene: Phaser.Scene, id: string, colorHex: string): string {
   const key = `tex-npc-${id}`;
   if (scene.textures.exists(key)) {
     return key;
   }
-  const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
+  const c = Phaser.Display.Color.HexStringToColor(colorHex);
+  const color = c.color;
+  const dark = c.clone().darken(28).color;
   const g = scene.make.graphics({ x: 0, y: 0 }, false);
+  // corpo (tronco arredondado)
   g.fillStyle(WORLD_COLORS.npcOutline, 1);
-  g.fillCircle(15, 15, 14);
+  g.fillRoundedRect(6, 22, 28, 32, 9);
   g.fillStyle(color, 1);
-  g.fillCircle(15, 15, 12);
-  g.generateTexture(key, 30, 30);
+  g.fillRoundedRect(8, 24, 24, 28, 8);
+  g.fillStyle(dark, 1);
+  g.fillRoundedRect(8, 44, 24, 8, 4); // sombra dos pés
+  // cabeça
+  g.fillStyle(WORLD_COLORS.npcOutline, 1);
+  g.fillCircle(20, 14, 13);
+  g.fillStyle(color, 1);
+  g.fillCircle(20, 14, 11);
+  g.generateTexture(key, 40, 56);
   g.destroy();
   return key;
 }
@@ -149,6 +190,9 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
     const hasArt = !!(b.spriteKey && scene.textures.exists(b.spriteKey));
     let collider: Phaser.GameObjects.Rectangle;
     if (hasArt) {
+      // prédios mantêm a LARGURA da arte (= largura do colisor no JSON), então
+      // a base cobre o footprint — não usar altura-alvo aqui (criaria paredes
+      // invisíveis quando a arte ficasse mais estreita que o colisor).
       const img = scene.add.image(cx, baseY, b.spriteKey!).setOrigin(0.5, 1).setDepth(baseY);
       collider = scene.add.rectangle(cx, cy, b.w, b.h); // invisível, só física
       addLabel(scene, cx, baseY - img.displayHeight - 6, b.name, baseY + 1, {
@@ -183,9 +227,10 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
       });
       continue;
     }
-    const artKey = `prop_${p.kind}`;
+    const artKey = KIND_ART[p.kind] ?? `prop_${p.kind}`;
     const key = scene.textures.exists(artKey) ? artKey : (PROP_TEX[p.kind] ?? 'tex-rock');
-    scene.add.image(p.x, p.y, key).setOrigin(0.5, 1).setDepth(p.y);
+    const propImg = scene.add.image(p.x, p.y, key).setOrigin(0.5, 1).setDepth(p.y);
+    fitHeight(propImg, KIND_HEIGHT[p.kind] ?? heightFor(key, DEFAULT_PROP_HEIGHT));
   }
 
   // postes de luz com flicker (param de piscar quando o caso é resolvido)
@@ -195,8 +240,10 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
   const npcs: SpawnedNpc[] = [];
   for (const n of c.npcs) {
     const chibiKey = SPRITE_ALIASES[n.id] ?? `chibi_${n.id}`;
-    const key = scene.textures.exists(chibiKey) ? chibiKey : npcTexture(scene, n.id, n.color);
+    const hasChibi = scene.textures.exists(chibiKey);
+    const key = hasChibi ? chibiKey : npcTexture(scene, n.id, n.color);
     const obj = scene.add.image(n.x, n.y, key).setOrigin(0.5, 1).setDepth(n.y);
+    fitHeight(obj, hasChibi ? heightFor(chibiKey, DEFAULT_CHIBI_HEIGHT) : DEFAULT_CHIBI_HEIGHT);
     scene.tweens.add({
       targets: obj,
       y: n.y - CHIBI.bobPx,
@@ -213,8 +260,10 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
   const inspectables: SpawnedInspectable[] = [];
   for (const i of c.inspectables) {
     const artKey = SPRITE_ALIASES[i.id] ?? `prop_${i.id}`;
-    const key = scene.textures.exists(artKey) ? artKey : 'tex-device';
+    const hasArt = scene.textures.exists(artKey);
+    const key = hasArt ? artKey : 'tex-device';
     const obj = scene.add.image(i.x, i.y, key).setOrigin(0.5, 1).setDepth(i.y);
+    fitHeight(obj, hasArt ? heightFor(artKey, DEFAULT_PROP_HEIGHT) : DEFAULT_PROP_HEIGHT);
     addLabel(scene, i.x, i.y - obj.displayHeight - 6, i.name, i.y + 1, { size: 14, wrap: 150 });
     inspectables.push({ def: i, obj });
   }
@@ -223,7 +272,10 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
 }
 
 interface LightParts {
-  lamp: Phaser.GameObjects.Image;
+  post: Phaser.GameObjects.Image;
+  isArt: boolean;
+  /** Só nos postes placeholder; a arte do lampião já tem o lampião aceso. */
+  lamp?: Phaser.GameObjects.Image;
   glow: Phaser.GameObjects.Image;
   timer?: Phaser.Time.TimerEvent;
 }
@@ -242,13 +294,21 @@ export class LightField {
         .image(d.x, d.y, hasArt ? 'prop_lamppost' : 'tex-pole')
         .setOrigin(0.5, 1)
         .setDepth(d.y);
-      const lampY = d.y - post.displayHeight + (hasArt ? 10 : 6);
-      const lamp = scene.add.image(d.x, lampY, 'tex-lamp').setDepth(d.y);
+      if (hasArt) {
+        fitHeight(post, heightFor('prop_lamppost', 104));
+      }
+      // posição da cabeça do lampião (perto do topo da arte)
+      const lampY = d.y - post.displayHeight + (hasArt ? 14 : 6);
+      // a arte do lampião JÁ tem o foco aceso — não empilhar tex-lamp por cima.
+      const lamp = hasArt ? undefined : scene.add.image(d.x, lampY, 'tex-lamp').setDepth(d.y);
       const glow = scene.add
         .image(d.x, lampY, 'tex-glow')
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(DEPTHS.glow);
-      const p: LightParts = { lamp, glow };
+      if (hasArt) {
+        glow.setScale((post.displayHeight * 0.75) / glow.height);
+      }
+      const p: LightParts = { post, isArt: hasArt, lamp, glow };
       this.parts.push(p);
       this.schedule(p);
     }
@@ -266,8 +326,12 @@ export class LightField {
       }
       const blackout = Math.random() < LIGHTS.blackoutChance;
       const a = blackout ? 0.06 : 0.35 + Math.random() * 0.65;
-      p.lamp.setAlpha(a);
+      p.lamp?.setAlpha(a);
       p.glow.setAlpha(a * LIGHTS.glowAlphaScale);
+      // postes de arte: escurece levemente a arte no apagão (sem tint)
+      if (p.isArt) {
+        p.post.setAlpha(blackout ? 0.62 : 0.86 + a * 0.14);
+      }
       this.schedule(p);
     });
   }
@@ -279,22 +343,29 @@ export class LightField {
     this.isSolved = true;
     for (const p of this.parts) {
       p.timer?.remove(false);
+      const lit: Phaser.GameObjects.Image[] = [p.glow];
+      if (p.lamp) {
+        lit.push(p.lamp);
+      }
       if (animated) {
-        this.scene.tweens.add({
-          targets: p.lamp,
-          alpha: 1,
-          duration: LIGHTS.solveTweenMs,
-          ease: 'Sine.Out',
-        });
+        if (p.lamp) {
+          this.scene.tweens.add({ targets: p.lamp, alpha: 1, duration: LIGHTS.solveTweenMs, ease: 'Sine.Out' });
+        }
         this.scene.tweens.add({
           targets: p.glow,
           alpha: LIGHTS.glowAlphaScale + 0.1,
           duration: LIGHTS.solveTweenMs,
           ease: 'Sine.Out',
         });
+        if (p.isArt) {
+          this.scene.tweens.add({ targets: p.post, alpha: 1, duration: LIGHTS.solveTweenMs, ease: 'Sine.Out' });
+        }
       } else {
-        p.lamp.setAlpha(1);
+        p.lamp?.setAlpha(1);
         p.glow.setAlpha(LIGHTS.glowAlphaScale + 0.1);
+        if (p.isArt) {
+          p.post.setAlpha(1);
+        }
       }
     }
   }

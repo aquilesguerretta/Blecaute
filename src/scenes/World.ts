@@ -1,6 +1,15 @@
 import Phaser from 'phaser';
 import type { Case, ClueDef, DialoguePage, InspectableDef, NpcDef } from '../data/schema';
-import { CAMERA, COMPANION, EXPANSIONS, INTERACT, PLAYER, STRINGS } from '../config';
+import {
+  ASSET_HEIGHTS,
+  CAMERA,
+  COMPANION,
+  DEFAULT_CHIBI_HEIGHT,
+  EXPANSIONS,
+  INTERACT,
+  PLAYER,
+  STRINGS,
+} from '../config';
 import { ExpansionCard } from '../ui/ExpansionCard';
 import { buildWorld, clueIndex, loadCase, type LightField } from '../systems/CaseLoader';
 import { ClueJournal } from '../systems/ClueJournal';
@@ -56,14 +65,21 @@ export class World extends Phaser.Scene {
     const { w, h } = this.caseData.world;
     this.physics.world.setBounds(0, 0, w, h);
 
-    const playerKey = this.textures.exists('chibi_jogador') ? 'chibi_jogador' : 'tex-player';
+    const hasChibi = this.textures.exists('chibi_jogador');
+    const playerKey = hasChibi ? 'chibi_jogador' : 'tex-player';
     this.player = this.physics.add.image(w / 2, h / 2, playerKey).setOrigin(0.5, 1);
-    // corpo AABB nos pés do chibi (origem é a base do sprite)
-    this.player.body.setSize(PLAYER.bodyW, PLAYER.bodyH);
-    this.player.body.setOffset(
-      (this.player.width - PLAYER.bodyW) / 2,
-      this.player.height - PLAYER.bodyH,
-    );
+    // reduz para a altura-alvo (arte vem em alta resolução)
+    const targetH = hasChibi ? (ASSET_HEIGHTS.chibi_jogador ?? DEFAULT_CHIBI_HEIGHT) : this.player.height;
+    const sc = this.player.height ? targetH / this.player.height : 1;
+    this.player.setScale(sc);
+    // corpo AABB nos pés: dimensões em px de fonte para que o mundo final
+    // fique PLAYER.bodyW x bodyH independentemente da escala do sprite.
+    const fw = this.player.width;
+    const fh = this.player.height;
+    const bw = PLAYER.bodyW / sc;
+    const bh = PLAYER.bodyH / sc;
+    this.player.body.setSize(bw, bh);
+    this.player.body.setOffset((fw - bw) / 2, fh - bh);
     this.player.setCollideWorldBounds(true);
     this.physics.add.collider(this.player, built.colliders);
 

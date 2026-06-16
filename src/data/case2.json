@@ -31,7 +31,7 @@
       { "x": 740, "y": 640, "w": 270, "h": 140, "name": "Sobrado das Cortinas Pretas", "spriteKey": "building_sobrado" },
       { "x": 120, "y": 760, "w": 250, "h": 140, "name": "Prédio Baixo", "spriteKey": "building_centro_a" },
       { "x": 140, "y": 1260, "w": 250, "h": 140, "name": "Salão da Regina", "spriteKey": "building_centro_b" },
-      { "x": 740, "y": 1290, "w": 240, "h": 160, "name": "Oficina do Centro" }
+      { "x": 740, "y": 1290, "w": 240, "h": 160, "name": "Oficina do Centro", "spriteKey": "building_galpao" }
     ],
     "lights": [
       { "x": 440, "y": 220 },

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { COMPANION } from '../config';
+import { ASSET_HEIGHTS, COMPANION, DEFAULT_CHIBI_HEIGHT } from '../config';
 
 /**
  * Companheiro (Saci): segue o player com atraso, parando a uma distância
@@ -9,11 +9,16 @@ export class Companion {
   readonly obj: Phaser.GameObjects.Image;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    const key = scene.textures.exists('chibi_saci') ? 'chibi_saci' : 'tex-saci';
+    const hasChibi = scene.textures.exists('chibi_saci');
+    const key = hasChibi ? 'chibi_saci' : 'tex-saci';
     this.obj = scene.add.image(x, y, key).setOrigin(0.5, 1);
+    // reduz para a altura-alvo; o bob idle oscila em torno dessa escala
+    const targetH = hasChibi ? (ASSET_HEIGHTS.chibi_saci ?? DEFAULT_CHIBI_HEIGHT) : this.obj.height;
+    const s = this.obj.height ? targetH / this.obj.height : 1;
+    this.obj.setScale(s);
     scene.tweens.add({
       targets: this.obj,
-      scale: { from: 1, to: 1.07 },
+      scale: { from: s, to: s * 1.06 },
       duration: 700,
       yoyo: true,
       repeat: -1,

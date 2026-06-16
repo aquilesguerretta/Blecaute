@@ -209,17 +209,19 @@ export const ASSET_WIDTHS: Record<string, number> = {
   building_sobrado: 280,
   building_centro_a: 260,
   building_centro_b: 260,
-  prop_poste_trafo: 140,
-  prop_medidor: 44,
-  // chibis: largura pequena — a arte é alta (ratio ~1:2); altura final ~46px
-  chibi_jogador: 22,
-  chibi_saci: 20,
-  chibi_marta: 21,
-  chibi_tonho: 21,
-  chibi_kiko: 18,
-  chibi_cida: 21,
-  chibi_nando: 21,
-  chibi_regina: 21,
+  // props pequenos: processados em alta resolução p/ downscale nítido no runtime
+  prop_poste_trafo: 200,
+  prop_medidor: 80,
+  // chibis: arte alta (ratio ~1:2); processa largo (~130px de altura) e o
+  // CaseLoader reduz por altura-alvo no runtime — fica nítido em qualquer zoom
+  chibi_jogador: 64,
+  chibi_saci: 64,
+  chibi_marta: 64,
+  chibi_tonho: 64,
+  chibi_kiko: 64,
+  chibi_cida: 64,
+  chibi_nando: 64,
+  chibi_regina: 64,
   portrait_saci: 256,
   portrait_marta: 256,
   portrait_tonho: 256,
@@ -229,11 +231,11 @@ export const ASSET_WIDTHS: Record<string, number> = {
   portrait_nando: 256,
   portrait_regina: 256,
   portrait_morador: 256,
-  prop_tree: 84,
-  prop_bench: 64,
-  prop_crate: 40,
-  prop_hydrant: 30,
-  prop_lamppost: 56,
+  prop_tree: 170,
+  prop_bench: 90,
+  prop_crate: 85,
+  prop_hydrant: 60,
+  prop_lamppost: 64,
   ground_vila: 512,
   logo_blecaute: 320,
   keyart_title: 780,
@@ -266,3 +268,44 @@ export const CHIBI = {
   bobPx: 2, // amplitude do idle bob
   bobMs: 800,
 } as const;
+
+// ===== Tamanho NA TELA (altura-alvo em px de mundo) =====
+// A arte é processada por LARGURA (ASSET_WIDTHS) em alta resolução; o
+// CaseLoader reduz cada objeto para esta altura-alvo no runtime
+// (setDisplaySize), preservando o aspect ratio. Isso conserta o lampião
+// gigante (alto+estreito) e os chibis minúsculos, e mantém tudo nítido.
+export const ASSET_HEIGHTS: Record<string, number> = {
+  // props
+  prop_lamppost: 104,
+  prop_poste_trafo: 132,
+  prop_tree: 118,
+  prop_bench: 48,
+  prop_crate: 50,
+  prop_hydrant: 54,
+  prop_medidor: 62,
+  // chibis (personagens)
+  chibi_jogador: 76,
+  chibi_kiko: 70,
+  chibi_marta: 74,
+  chibi_saci: 64,
+  chibi_tonho: 72,
+  chibi_cida: 74,
+  chibi_nando: 74,
+  chibi_regina: 74,
+  // prédios NÃO entram aqui: ficam no tamanho por LARGURA (= largura do
+  // colisor no JSON) para a base cobrir o footprint.
+};
+
+export const DEFAULT_PROP_HEIGHT = 64;
+export const DEFAULT_CHIBI_HEIGHT = 72;
+
+// kinds de prop sem arte própria -> reaproveitam arte existente.
+export const KIND_ART: Record<string, string> = {
+  barrel: 'prop_crate',
+  bush: 'prop_tree', // arbusto = árvore menor (altura abaixo)
+};
+// altura-alvo específica por kind (sobrepõe ASSET_HEIGHTS do asset reusado).
+export const KIND_HEIGHT: Record<string, number> = {
+  bush: 60,
+  rock: 36,
+};

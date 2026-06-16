@@ -248,13 +248,20 @@ export const PIN_COLORS = {
 // ===== Pipeline de assets (scripts/process-assets.mjs lê este mapa) =====
 // Largura-alvo (px) por nome de arquivo em /raw. Altura segue o aspect ratio.
 export const ASSET_WIDTHS: Record<string, number> = {
+  // Hierarquia de massa coerente (largura na base isométrica). Também é a
+  // largura-alvo de runtime dos prédios (fitWidth no CaseLoader) — não
+  // precisa regenerar arte: a config sozinha redimensiona em cena.
+  building_bar: 300,
   building_casa_marta: 300,
-  building_galpao: 380,
-  building_bar: 320,
-  building_padaria: 340,
-  building_sobrado: 280,
-  building_centro_a: 260,
-  building_centro_b: 260,
+  building_galpao: 340,
+  building_padaria: 320,
+  building_sobrado: 360, // prédio alto = base mais larga
+  building_centro_a: 300,
+  building_centro_b: 300,
+  building_delegacia: 320,
+  building_fazenda: 340,
+  building_subestacao: 340,
+  building_casebre: 320,
   // props pequenos: processados em alta resolução p/ downscale nítido no runtime
   prop_poste_trafo: 200,
   prop_medidor: 80,

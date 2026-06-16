@@ -4,6 +4,7 @@ import case2 from '../data/case2.json';
 import type { Case, InspectableDef, LightDef, NpcDef } from '../data/schema';
 import {
   ASSET_HEIGHTS,
+  ASSET_WIDTHS,
   CHIBI,
   DEFAULT_CHIBI_HEIGHT,
   DEFAULT_PROP_HEIGHT,
@@ -93,6 +94,14 @@ function fitHeight(img: Phaser.GameObjects.Image, targetH: number): void {
     return;
   }
   img.setDisplaySize(img.width * (targetH / img.height), targetH);
+}
+
+/** Reduz a imagem para uma largura-alvo (prédios) preservando o aspect ratio. */
+function fitWidth(img: Phaser.GameObjects.Image, targetW: number): void {
+  if (!targetW || !img.width) {
+    return;
+  }
+  img.setDisplaySize(targetW, img.height * (targetW / img.width));
 }
 
 function heightFor(key: string, fallback: number): number {
@@ -214,6 +223,8 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
       // a base cobre o footprint — não usar altura-alvo aqui (criaria paredes
       // invisíveis quando a arte ficasse mais estreita que o colisor).
       const img = scene.add.image(cx, baseY, b.spriteKey!).setOrigin(0.5, 1).setDepth(baseY);
+      // massa coerente: largura-alvo da config (sem regenerar a arte)
+      fitWidth(img, ASSET_WIDTHS[b.spriteKey!] ?? img.width);
       if (b.platform !== false) {
         addPlatform(scene, cx, baseY, img.displayWidth, baseY - 2);
       }

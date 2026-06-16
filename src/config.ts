@@ -41,7 +41,10 @@ export function worldZoom(viewW: number, viewH: number, worldW: number, worldH: 
 }
 
 export const PLAYER = {
-  speed: 200, // px/s
+  speed: 210, // px/s (velocidade de topo)
+  accel: 2400, // px/s² ao manter direção (~90ms até o topo: peso sem travar)
+  decel: 3200, // px/s² ao soltar (parada firme, sem patinar)
+  turnBoost: 1.6, // multiplica o accel ao inverter direção (vira responsivo)
   bodyW: 20, // AABB de colisão (pés)
   bodyH: 16,
   texSize: 28,
@@ -65,9 +68,9 @@ export const JOYSTICK = {
 
 export const COMPANION = {
   name: 'Saci',
-  followDist: 44, // distância alvo atrás do player
-  maxSpeed: 240,
-  gain: 3.4, // velocidade proporcional à distância excedente
+  followDist: 50, // distância alvo atrás do player (trilha mais solta)
+  maxSpeed: 230,
+  gain: 2.8, // velocidade proporcional à distância excedente
   interactRadius: 70,
   portrait: '#b03a2e',
   bodyColor: 0x3e2a20,

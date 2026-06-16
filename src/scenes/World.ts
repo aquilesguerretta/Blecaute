@@ -9,9 +9,21 @@ import {
   INTERACT,
   PLAYER,
   STRINGS,
+  isDesktopPointer,
   worldZoom,
 } from '../config';
 import { ExpansionCard } from '../ui/ExpansionCard';
+
+/** Move `current` em direção a `target` no máximo `maxDelta` (ease linear). */
+function approach(current: number, target: number, maxDelta: number): number {
+  if (current < target) {
+    return Math.min(current + maxDelta, target);
+  }
+  if (current > target) {
+    return Math.max(current - maxDelta, target);
+  }
+  return target;
+}
 import { buildWorld, clueIndex, loadCase, type LightField } from '../systems/CaseLoader';
 import { ClueJournal } from '../systems/ClueJournal';
 import { Companion } from '../systems/Companion';
@@ -90,7 +102,7 @@ export class World extends Phaser.Scene {
 
     this.saci = new Companion(this, w / 2 + 34, h / 2 + 10);
 
-    this.joystick = new VirtualJoystick(this);
+    this.joystick = new VirtualJoystick(this, { touchEnabled: !isDesktopPointer() });
 
     this.ui = new UIManager(this.game.canvas, (key) => this.textures.exists(key));
     this.ui.setTitle(this.caseData.title);
@@ -159,6 +171,10 @@ export class World extends Phaser.Scene {
     }
 
     this.persist();
+
+    if (isDesktopPointer()) {
+      this.ui.toast(STRINGS.controlsDesktop);
+    }
 
     // gancho somente leitura para a verificação automatizada (playwright)
     (window as unknown as Record<string, unknown>).__blecaute = {
@@ -339,14 +355,29 @@ export class World extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
+    const dt = delta / 1000;
     const modal = this.ui.isModalOpen() || this.expansion !== null;
     this.joystick.setEnabled(!modal);
 
     const v = this.joystick.vector();
-    if (modal) {
-      this.player.setVelocity(0, 0);
+    const body = this.player.body;
+    if (modal || (v.x === 0 && v.y === 0)) {
+      // sem input: desacelera até parar
+      body.velocity.x = approach(body.velocity.x, 0, PLAYER.decel * dt);
+      body.velocity.y = approach(body.velocity.y, 0, PLAYER.decel * dt);
     } else {
-      this.player.setVelocity(v.x * PLAYER.speed, v.y * PLAYER.speed);
+      const tx = v.x * PLAYER.speed;
+      const ty = v.y * PLAYER.speed;
+      const rx =
+        Math.sign(tx) !== Math.sign(body.velocity.x) && body.velocity.x !== 0
+          ? PLAYER.accel * PLAYER.turnBoost
+          : PLAYER.accel;
+      const ry =
+        Math.sign(ty) !== Math.sign(body.velocity.y) && body.velocity.y !== 0
+          ? PLAYER.accel * PLAYER.turnBoost
+          : PLAYER.accel;
+      body.velocity.x = approach(body.velocity.x, tx, rx * dt);
+      body.velocity.y = approach(body.velocity.y, ty, ry * dt);
       if (Math.abs(v.x) > 0.1) {
         this.player.setFlipX(v.x < 0);
       }
@@ -355,5 +386,10 @@ export class World extends Phaser.Scene {
     this.saci.update(delta, this.player.x, this.player.y);
     this.joystick.update();
     this.refreshInteract(modal);
+
+    // desktop: E/Espaço dispara a ação contextual atual
+    if (!modal && this.currentInteract && this.joystick.interactPressed()) {
+      this.currentInteract.action();
+    }
   }
 }

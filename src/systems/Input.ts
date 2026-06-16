@@ -15,9 +15,11 @@ export class VirtualJoystick {
   private stick = new Phaser.Math.Vector2();
   private out = new Phaser.Math.Vector2();
   private enabled = true;
+  private touchEnabled: boolean;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, opts?: { touchEnabled?: boolean }) {
     this.scene = scene;
+    this.touchEnabled = opts?.touchEnabled ?? true;
     this.gfx = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.joystick);
     scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.onDown, this);
     scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.onMove, this);
@@ -25,12 +27,23 @@ export class VirtualJoystick {
     scene.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.onUp, this);
     const kb = scene.input.keyboard;
     if (kb) {
-      this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT') as Record<
+      this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E,SPACE') as Record<
         string,
         Phaser.Input.Keyboard.Key
       >;
     }
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.teardown());
+  }
+
+  /** true no frame em que E/Espaço é pressionado (interação no desktop). */
+  interactPressed(): boolean {
+    if (!this.enabled || !this.keys) {
+      return false;
+    }
+    return (
+      Phaser.Input.Keyboard.JustDown(this.keys.E) ||
+      Phaser.Input.Keyboard.JustDown(this.keys.SPACE)
+    );
   }
 
   /** Desativa durante overlays modais; solta o stick atual. */
@@ -92,7 +105,8 @@ export class VirtualJoystick {
   }
 
   private onDown(p: Phaser.Input.Pointer): void {
-    if (!this.enabled || this.pointerId !== null) {
+    // no desktop (mouse) o stick não nasce; teclado cuida do movimento
+    if (!this.touchEnabled || !this.enabled || this.pointerId !== null) {
       return;
     }
     this.pointerId = p.id;

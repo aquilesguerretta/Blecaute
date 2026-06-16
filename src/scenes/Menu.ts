@@ -119,6 +119,9 @@ export class Menu extends Phaser.Scene {
       kb.once('keydown-ENTER', () => this.start());
       kb.once('keydown-SPACE', () => this.start());
     }
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      delete (window as unknown as Record<string, unknown>).__blecauteMenu;
+    });
   }
 
   private start(): void {

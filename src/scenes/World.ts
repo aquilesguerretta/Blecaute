@@ -97,6 +97,8 @@ export class World extends Phaser.Scene {
     this.physics.add.collider(this.player, built.colliders);
 
     this.cameras.main.setBounds(0, 0, w, h);
+    this.cameras.main.startFollow(this.player, true, CAMERA.lerp, CAMERA.lerp);
+    this.cameras.main.setDeadzone(CAMERA.deadzoneW, CAMERA.deadzoneH);
     this.applyView();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.applyView, this);
 
@@ -112,6 +114,8 @@ export class World extends Phaser.Scene {
       this.ui.destroy();
       this.expansion?.destroy();
       this.expansion = null;
+      // limpa o gancho p/ não satisfizer gates do e2e com estado da cena morta
+      delete (window as unknown as Record<string, unknown>).__blecaute;
     });
 
     this.journal = new ClueJournal(clueIndex(this.caseData));
@@ -313,14 +317,11 @@ export class World extends Phaser.Scene {
     this.gotoMap();
   }
 
-  /** Zoom da câmera a partir do viewport atual (chamado no create e no resize). */
+  /** Só o zoom reage ao viewport (follow/deadzone são fixados uma vez no create). */
   private applyView(): void {
     const { width, height } = this.scale.gameSize;
     const { w, h } = this.caseData.world;
-    const cam = this.cameras.main;
-    cam.setZoom(worldZoom(width, height, w, h));
-    cam.startFollow(this.player, true, CAMERA.lerp, CAMERA.lerp);
-    cam.setDeadzone(CAMERA.deadzoneW, CAMERA.deadzoneH);
+    this.cameras.main.setZoom(worldZoom(width, height, w, h));
   }
 
   private gotoMap(): void {

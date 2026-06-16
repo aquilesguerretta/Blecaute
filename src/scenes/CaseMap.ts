@@ -137,6 +137,9 @@ export class CaseMap extends Phaser.Scene {
     }
 
     centerDesign(this, this.map, () => this.syncHook());
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      delete (window as unknown as Record<string, unknown>).__blecauteMap;
+    });
   }
 
   /** Coordenadas de TELA dos pins (pós-transform do container) para o e2e. */

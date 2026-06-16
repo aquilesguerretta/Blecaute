@@ -12,10 +12,15 @@ new Phaser.Game({
   parent: 'app',
   backgroundColor: GAME.bg,
   scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: GAME.width,
-    height: GAME.height,
+    // RESIZE: canvas = #app (janela inteira). Sem letterbox no desktop;
+    // cada cena se centraliza/escala e o World deriva o zoom do viewport.
+    mode: Phaser.Scale.RESIZE,
+    autoCenter: Phaser.Scale.NO_CENTER,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    min: { width: 320, height: 480 },
+    max: { width: 2560, height: 1440 },
+    expandParent: true,
   },
   physics: {
     default: 'arcade',

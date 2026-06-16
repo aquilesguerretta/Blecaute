@@ -1,5 +1,5 @@
 import type { DialoguePage, SuspectDef } from '../data/schema';
-import { STRINGS, UI } from '../config';
+import { STRINGS, UI, isDesktopPointer } from '../config';
 
 // fallback quando o asset de ícone não está disponível
 const ICON_EMOJI: Record<string, string> = {
@@ -74,6 +74,7 @@ export class UIManager {
 
     this.root = el('div', '', document.body as HTMLElement);
     this.root.id = 'ui-root';
+    this.root.classList.toggle('desktop', isDesktopPointer());
 
     // topo: botão do caderno (esquerda) + título do caso (direita)
     const topbar = el('div', '', this.root);

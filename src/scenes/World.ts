@@ -9,6 +9,7 @@ import {
   INTERACT,
   PLAYER,
   STRINGS,
+  worldZoom,
 } from '../config';
 import { ExpansionCard } from '../ui/ExpansionCard';
 import { buildWorld, clueIndex, loadCase, type LightField } from '../systems/CaseLoader';
@@ -84,7 +85,8 @@ export class World extends Phaser.Scene {
     this.physics.add.collider(this.player, built.colliders);
 
     this.cameras.main.setBounds(0, 0, w, h);
-    this.cameras.main.startFollow(this.player, true, CAMERA.lerp, CAMERA.lerp);
+    this.applyView();
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.applyView, this);
 
     this.saci = new Companion(this, w / 2 + 34, h / 2 + 10);
 
@@ -94,6 +96,7 @@ export class World extends Phaser.Scene {
     this.ui.setTitle(this.caseData.title);
     this.dialogue = new DialogueSystem(this.ui);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.applyView, this);
       this.ui.destroy();
       this.expansion?.destroy();
       this.expansion = null;
@@ -288,6 +291,16 @@ export class World extends Phaser.Scene {
       return;
     }
     this.gotoMap();
+  }
+
+  /** Zoom da câmera a partir do viewport atual (chamado no create e no resize). */
+  private applyView(): void {
+    const { width, height } = this.scale.gameSize;
+    const { w, h } = this.caseData.world;
+    const cam = this.cameras.main;
+    cam.setZoom(worldZoom(width, height, w, h));
+    cam.startFollow(this.player, true, CAMERA.lerp, CAMERA.lerp);
+    cam.setDeadzone(CAMERA.deadzoneW, CAMERA.deadzoneH);
   }
 
   private gotoMap(): void {

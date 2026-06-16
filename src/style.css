@@ -526,3 +526,26 @@ body {
   max-width: 86%;
   text-align: center;
 }
+
+/* ===== Desktop (ponteiro fino): canvas preenche a janela; centra as folhas
+   e ancora os botões nos cantos, sem zona de polegar do mobile ===== */
+#ui-root.desktop .sheet,
+#ui-root.desktop .dlg-sheet {
+  width: 100%;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#ui-root.desktop #ui-dialogue {
+  align-items: center;
+}
+
+#ui-root.desktop #ui-interact {
+  bottom: 28px;
+  right: 28px;
+}
+
+#ui-root.desktop #ui-topbar {
+  padding-top: 14px;
+}

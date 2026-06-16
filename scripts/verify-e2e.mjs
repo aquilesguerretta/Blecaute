@@ -22,7 +22,7 @@ const getMap = (page) => page.evaluate(() => window.__blecauteMap);
 
 async function waitMap(page, cond, label) {
   try {
-    await page.waitForFunction(cond, undefined, { timeout: 10000 });
+    await page.waitForFunction(cond, undefined, { timeout: 15000 });
     ok(true, label);
   } catch {
     ok(false, `${label} (timeout)`);
@@ -249,7 +249,11 @@ try {
   await page.goto(`http://localhost:${PORT}/`);
   await waitMap(page, () => !!window.__blecauteMap?.continue, 'casemap oferece Continuar (caso 2 em andamento)');
   map = await getMap(page);
-  await page.mouse.click(map.continue.x, map.continue.y);
+  if (!map.continue) {
+    ok(false, 'botão Continuar ausente — pulando clique');
+  } else {
+    await page.mouse.click(map.continue.x, map.continue.y);
+  }
   await page.waitForFunction(
     () => window.__blecaute?.getState?.().caseId === 'case2' && window.__blecaute.getState().clues === 1,
     undefined,

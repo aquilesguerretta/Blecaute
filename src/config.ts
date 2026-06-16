@@ -1,11 +1,44 @@
 // Todos os números de tuning do jogo vivem aqui.
 // Conteúdo de caso (textos, posições, pistas) fica em /data/caseN.json.
+import Phaser from 'phaser';
 
 export const GAME = {
   width: 390,
   height: 844,
   bg: '#05060a',
 } as const;
+
+// ===== Viewport responsivo (mobile retrato + desktop paisagem) =====
+// Canvas = janela inteira (Scale.RESIZE). Cenas de menu/hub são autoradas em
+// 390x844 e centralizadas+escaladas; o World deriva o zoom da câmera daqui.
+export const VIEW = {
+  designWidth: 390,
+  designHeight: 844,
+  // altura de mundo (px) que se quer ver — retrato é mais íntimo, paisagem mais aberta
+  targetWorldH_portrait: 620,
+  targetWorldH_landscape: 760,
+  minZoom: 0.85,
+  maxZoom: 2.6,
+} as const;
+
+/** true quando há ponteiro fino (mouse) -> UX de desktop. */
+export function isDesktopPointer(): boolean {
+  return (
+    typeof window !== 'undefined' && window.matchMedia?.('(pointer: fine)').matches === true
+  );
+}
+
+/**
+ * Zoom da câmera a partir do viewport: mira uma altura de mundo confortável,
+ * mas nunca deixa "vazar" o mundo (cobre a viewport quando o mundo é menor).
+ */
+export function worldZoom(viewW: number, viewH: number, worldW: number, worldH: number): number {
+  const landscape = viewW >= viewH;
+  const targetH = landscape ? VIEW.targetWorldH_landscape : VIEW.targetWorldH_portrait;
+  const cover = Math.max(viewW / worldW, viewH / worldH); // mínimo p/ não mostrar vazio
+  const z = Math.max(viewH / targetH, cover);
+  return Phaser.Math.Clamp(z, VIEW.minZoom, VIEW.maxZoom);
+}
 
 export const PLAYER = {
   speed: 200, // px/s
@@ -15,7 +48,9 @@ export const PLAYER = {
 } as const;
 
 export const CAMERA = {
-  lerp: 0.09,
+  lerp: 0.12, // acompanha o ramp de aceleração sem ficar pra trás
+  deadzoneW: 90, // caixa de folga horizontal (jitter do joystick não move a câmera)
+  deadzoneH: 130, // folga vertical maior (mundo é alto)
 } as const;
 
 export const JOYSTICK = {

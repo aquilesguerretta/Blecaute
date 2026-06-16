@@ -15,7 +15,7 @@ import {
   worldZoom,
 } from '../config';
 import { addContactShadow, type ContactShadow } from '../systems/Shadow';
-import { type SpawnedNpc } from '../systems/CaseLoader';
+import { type SpawnedInspectable, type SpawnedNpc } from '../systems/CaseLoader';
 import { ExpansionCard } from '../ui/ExpansionCard';
 
 /** Move `current` em direção a `target` no máximo `maxDelta` (ease linear). */
@@ -63,6 +63,9 @@ export class World extends Phaser.Scene {
   private npcs: SpawnedNpc[] = [];
   private grade!: Phaser.GameObjects.Rectangle;
   private vignette!: Phaser.GameObjects.Image;
+  private indicators: Array<{ obj: Phaser.GameObjects.GameObject; done: () => boolean; gone: boolean }> = [];
+  private talkedNpcs = new Set<string>();
+  private inspectedIds = new Set<string>();
 
   constructor() {
     super('World');
@@ -192,6 +195,8 @@ export class World extends Phaser.Scene {
     });
     this.ui.onInteract = () => this.currentInteract?.action();
 
+    this.buildIndicators(built.npcs, built.inspectables);
+
     if (!this.prog.introSeen) {
       this.dialogue.open(this.caseData.intro, () => {
         this.prog.introSeen = true;
@@ -220,7 +225,57 @@ export class World extends Phaser.Scene {
     };
   }
 
+  /** Indicador flutuante "!" / lupa sobre interagíveis ainda não concluídos. */
+  private buildIndicators(npcs: SpawnedNpc[], inspectables: SpawnedInspectable[]): void {
+    const make = (
+      x: number,
+      headY: number,
+      kind: 'npc' | 'inspect',
+      done: () => boolean,
+    ): void => {
+      const iconKey = kind === 'npc' ? 'icon_speech' : 'icon_magnifier';
+      let obj: Phaser.GameObjects.Image | Phaser.GameObjects.Text;
+      if (this.textures.exists(iconKey)) {
+        const img = this.add.image(x, headY, iconKey).setDepth(6000);
+        img.setDisplaySize(28, (28 * img.height) / img.width);
+        obj = img;
+      } else {
+        obj = this.add
+          .text(x, headY, kind === 'npc' ? '!' : '🔍', {
+            fontFamily: "system-ui, 'Segoe UI', sans-serif",
+            fontSize: '26px',
+            fontStyle: 'bold',
+            color: '#FAC775',
+            stroke: '#10131f',
+            strokeThickness: 4,
+          })
+          .setOrigin(0.5)
+          .setDepth(6000);
+      }
+      const entry = { obj, done, gone: false };
+      if (done()) {
+        obj.destroy();
+        entry.gone = true;
+      } else {
+        this.tweens.add({ targets: obj, y: headY - 8, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+        this.tweens.add({ targets: obj, alpha: { from: 1, to: 0.55 }, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+      }
+      this.indicators.push(entry);
+    };
+    for (const { def, obj } of npcs) {
+      make(def.x, def.y - obj.displayHeight - 12, 'npc', () =>
+        def.clue ? this.journal.has(def.clue.id) : this.talkedNpcs.has(def.id),
+      );
+    }
+    for (const { def, obj } of inspectables) {
+      make(def.x, def.y - obj.displayHeight - 12, 'inspect', () =>
+        def.clue ? this.journal.has(def.clue.id) : this.inspectedIds.has(def.id),
+      );
+    }
+  }
+
   private talkToNpc(def: NpcDef): void {
+    this.talkedNpcs.add(def.id);
     const portraitKey = def.portraitKey ?? `portrait_${def.id}`;
     const pages = def.dialogue.map((text) => ({
       speaker: def.name,
@@ -232,6 +287,7 @@ export class World extends Phaser.Scene {
   }
 
   private inspect(def: InspectableDef): void {
+    this.inspectedIds.add(def.id);
     const pages = def.dialogue.map((text) => ({
       speaker: def.name,
       text,
@@ -432,6 +488,27 @@ export class World extends Phaser.Scene {
     for (const n of this.npcs) {
       const lift = Math.max(0, Math.min(1, (n.baseY - n.obj.y) / CHIBI.bobPx));
       n.shadow.follow(n.obj.x, n.baseY, 1 - 0.08 * lift);
+      // NPC encara o jogador quando ele se aproxima
+      if (Math.hypot(this.player.x - n.def.x, this.player.y - n.def.y) < INTERACT.radius + 36) {
+        n.obj.setFlipX(this.player.x < n.def.x);
+      }
+    }
+
+    // indicadores: somem com fade quando o objeto é concluído
+    for (const it of this.indicators) {
+      if (it.gone || !it.done()) {
+        continue;
+      }
+      it.gone = true;
+      this.tweens.killTweensOf(it.obj);
+      this.tweens.add({
+        targets: it.obj,
+        alpha: 0,
+        scale: 0.4,
+        duration: 260,
+        ease: 'Sine.In',
+        onComplete: () => it.obj.destroy(),
+      });
     }
 
     // desktop: E/Espaço dispara a ação contextual atual

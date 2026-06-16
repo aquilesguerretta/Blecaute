@@ -50,6 +50,10 @@ export class ExpansionCard {
         const img = el('img', '', icon);
         img.src = `assets/${assetKey}.png`;
         img.alt = c.title;
+      } else if (c.iconKey && hasAsset(c.iconKey)) {
+        const img = el('img', 'exp-icon-sm', icon);
+        img.src = `assets/${c.iconKey}.png`;
+        img.alt = c.title;
       } else {
         icon.textContent = c.icon;
       }

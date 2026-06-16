@@ -4,6 +4,12 @@
   "minClues": 3,
   "intro": [
     {
+      "speaker": "Você",
+      "color": "#2e6f78",
+      "portraitKey": "portrait_agente",
+      "text": "Mais um apagão na Vila Aurora. Sou agente de campo da distribuidora — vim descobrir o porquê."
+    },
+    {
       "speaker": "Saci",
       "color": "#B03A2E",
       "portraitKey": "portrait_saci",

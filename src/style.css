@@ -316,7 +316,9 @@ body {
 }
 
 .suspect {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
   text-align: left;
   background: #1a2030;
@@ -325,6 +327,20 @@ body {
   padding: 12px 14px;
   color: #f4f1e8;
   min-height: 64px;
+}
+
+.suspect-face {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center top;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.suspect-body {
+  min-width: 0;
 }
 
 .suspect b {
@@ -372,6 +388,30 @@ body {
 /* --- vitória --- */
 .sheet.victory {
   text-align: center;
+}
+
+.victory-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.victory-star {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.victory-face {
+  width: 96px;
+  height: 96px;
+  margin: 2px auto 0;
+  border-radius: 14px;
+  background-size: cover;
+  background-position: center top;
+  border: 2px solid #ffd23f;
+  display: none;
 }
 
 .sheet.victory .case-name {
@@ -464,6 +504,12 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.exp-icon img.exp-icon-sm {
+  width: 64%;
+  height: 64%;
+  object-fit: contain;
 }
 
 .exp-body b {

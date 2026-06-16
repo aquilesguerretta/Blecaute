@@ -58,6 +58,7 @@ export class UIManager {
   private accuseCancel: HTMLButtonElement;
 
   private victoryEl: HTMLDivElement;
+  private victoryFace: HTMLDivElement;
   private victoryCase: HTMLDivElement;
   private victoryLesson: HTMLDivElement;
   private victoryDoneCb?: () => void;
@@ -141,7 +142,18 @@ export class UIManager {
     this.victoryEl = el('div', 'overlay center clickable', this.root);
     this.victoryEl.id = 'ui-victory';
     const vSheet = el('div', 'sheet victory', this.victoryEl);
-    el('h2', '', vSheet, STRINGS.victoryTitle);
+    const vHead = el('div', 'victory-head', vSheet);
+    const star = (): void => {
+      if (hasAsset('icon_star')) {
+        const st = el('img', 'victory-star', vHead);
+        st.src = 'assets/icon_star.png';
+        st.alt = '';
+      }
+    };
+    star();
+    el('h2', '', vHead, STRINGS.victoryTitle);
+    star();
+    this.victoryFace = el('div', 'victory-face', vSheet);
     this.victoryCase = el('div', 'case-name', vSheet);
     el('div', 'lesson-label', vSheet, STRINGS.lessonLabel);
     this.victoryLesson = el('div', 'lesson', vSheet);
@@ -195,7 +207,11 @@ export class UIManager {
   }
 
   showDialogue(page: DialoguePage, index: number, total: number): void {
-    if (page.portraitKey && this.hasAsset(page.portraitKey)) {
+    if (page.frame === 'tablet' && this.hasAsset('ui_tablet')) {
+      // leitura de equipamento: moldura de tablet no lugar do retrato
+      this.dlgPortrait.style.background = `#0d1422 url('assets/ui_tablet.png') center / contain no-repeat`;
+      this.dlgPortrait.textContent = '';
+    } else if (page.portraitKey && this.hasAsset(page.portraitKey)) {
       this.dlgPortrait.style.background = `${page.color ?? '#10141f'} url('assets/${page.portraitKey}.png') center / cover no-repeat`;
       this.dlgPortrait.textContent = '';
     } else {
@@ -234,8 +250,13 @@ export class UIManager {
       const btn = el('button', 'suspect', this.accuseList);
       btn.type = 'button';
       btn.dataset.id = s.id;
-      el('b', '', btn, s.name);
-      el('span', '', btn, s.desc);
+      if (s.portraitKey && this.hasAsset(s.portraitKey)) {
+        const face = el('div', 'suspect-face', btn);
+        face.style.backgroundImage = `url('assets/${s.portraitKey}.png')`;
+      }
+      const body = el('div', 'suspect-body', btn);
+      el('b', '', body, s.name);
+      el('span', '', body, s.desc);
       btn.addEventListener('click', () => onPick(s.id));
     }
     this.accuseCancel.onclick = () => onCancel();
@@ -246,7 +267,13 @@ export class UIManager {
     this.accuseEl.classList.remove('visible');
   }
 
-  showVictory(caseTitle: string, lesson: string, onDone: () => void): void {
+  showVictory(caseTitle: string, lesson: string, onDone: () => void, portraitKey?: string): void {
+    if (portraitKey && this.hasAsset(portraitKey)) {
+      this.victoryFace.style.backgroundImage = `url('assets/${portraitKey}.png')`;
+      this.victoryFace.style.display = 'block';
+    } else {
+      this.victoryFace.style.display = 'none';
+    }
     this.victoryCase.textContent = caseTitle;
     this.victoryLesson.textContent = lesson;
     this.victoryDoneCb = onDone;

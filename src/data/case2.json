@@ -4,6 +4,12 @@
   "minClues": 3,
   "intro": [
     {
+      "speaker": "Você",
+      "color": "#2e6f78",
+      "portraitKey": "portrait_agente",
+      "text": "Centro às escuras de novo, sempre às 3h. Peguei o caso — vamos ler o que os equipamentos dizem."
+    },
+    {
       "speaker": "Saci",
       "color": "#B03A2E",
       "portraitKey": "portrait_saci",
@@ -172,7 +178,8 @@
       "id": "morador_sobrado",
       "name": "O morador do sobrado",
       "desc": "Alugou há 3 meses, pediu três ligações novas e ninguém nunca o viu entrar ou sair.",
-      "correct": true
+      "correct": true,
+      "portraitKey": "portrait_morador"
     }
   ],
   "victory": {

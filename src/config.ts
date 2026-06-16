@@ -166,6 +166,8 @@ export interface ExpansionChoice {
   id: string;
   /** Emoji placeholder; se existir o asset card_<id>, a UI usa a imagem. */
   icon: string;
+  /** Ícone de asset (em /public/assets) — fallback antes do emoji. */
+  iconKey?: string;
   title: string;
   desc: string;
 }
@@ -201,6 +203,7 @@ export const EXPANSIONS: Record<string, ExpansionChoice[]> = {
     {
       id: 'bateria',
       icon: '🔋',
+      iconKey: 'icon_battery',
       title: 'Bateria de Bairro',
       desc: 'Armazena na madrugada, devolve no pico. Tecnologia nova e cara.',
     },

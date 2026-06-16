@@ -206,6 +206,7 @@ export class World extends Phaser.Scene {
       speaker: def.name,
       text,
       color: INTERACT.inspectPortrait,
+      frame: 'tablet', // leitura de equipamento -> moldura de tablet
     }));
     this.dialogue.open(pages, () => this.collectClue(def.clue));
   }
@@ -283,8 +284,11 @@ export class World extends Phaser.Scene {
       this.persist();
       this.lightField.solve(true);
       this.ui.toast(STRINGS.solvedToast);
-      this.ui.showVictory(this.caseData.title, this.caseData.victory.lesson, () =>
-        this.afterVictory(),
+      this.ui.showVictory(
+        this.caseData.title,
+        this.caseData.victory.lesson,
+        () => this.afterVictory(),
+        suspect.portraitKey,
       );
     });
   }

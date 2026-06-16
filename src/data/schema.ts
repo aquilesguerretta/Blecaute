@@ -7,6 +7,8 @@ export interface DialoguePage {
   color?: string;
   /** Asset de retrato (em /public/assets); se ausente/não carregado, usa a cor. */
   portraitKey?: string;
+  /** Moldura especial do slot ("tablet" = leitura de equipamento). */
+  frame?: string;
 }
 
 export interface ClueDef {
@@ -70,6 +72,8 @@ export interface SuspectDef {
   desc: string;
   correct: boolean;
   rebuttal?: string;
+  /** Retrato do suspeito (em /public/assets); usado na acusação e na revelação. */
+  portraitKey?: string;
 }
 
 export interface VictoryDef {

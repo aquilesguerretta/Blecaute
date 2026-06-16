@@ -149,11 +149,8 @@ try {
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${SHOTS}/02-intro-dialogo.png` });
   ok(true, 'intro do caso 1 abre com retrato do saci');
-  for (let i = 0; i < 3; i++) {
-    await page.click('#ui-dialogue');
-    await page.waitForTimeout(220);
-  }
-  ok(!(await page.isVisible('#ui-dialogue.visible')), 'intro fecha após 3 toques');
+  await advanceDialogue(page);
+  ok(!(await page.isVisible('#ui-dialogue.visible')), 'intro fecha ao avançar as páginas');
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${SHOTS}/03-mundo.png` });
 
@@ -246,10 +243,7 @@ try {
   await page.goto(`http://localhost:${PORT}/?case=2`);
   await page.waitForSelector('#ui-dialogue.visible', { timeout: 25000 });
   ok(true, '?case=2 vai direto ao caso 2');
-  for (let i = 0; i < 3; i++) {
-    await page.click('#ui-dialogue');
-    await page.waitForTimeout(220);
-  }
+  await advanceDialogue(page);
 
   await walkTo(page, 280, 545, 'Dona Cida');
   await tapInteract(page, 'Falar: Dona Cida');
@@ -292,13 +286,21 @@ try {
   await walkTo(page, 520, 1180, 'ponto aberto (praça)');
   await tapInteract(page, 'ACUSAR');
   await page.waitForSelector('#ui-accuse.visible', { timeout: 3000 });
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `${SHOTS}/13-case2-acusacao.png` });
+  const faces = await page.locator('#ui-accuse .suspect-face').count();
+  ok(faces >= 1, `acusação mostra retrato do suspeito (${faces})`);
   await page.click('button.suspect[data-id="morador_sobrado"]');
   await advanceDialogue(page); // reveal
   await page.waitForSelector('#ui-victory.visible', { timeout: 3000 });
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `${SHOTS}/14-case2-vitoria.png` });
   s = await getState(page);
   ok(s.solved === true && s.lightsOn === true, 'caso 2 resolvido (mineradora clandestina)');
   await page.click('#ui-victory-done');
   await page.waitForSelector('#ui-expansion', { timeout: 3000 });
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `${SHOTS}/15-case2-expansao.png` });
   await page.click('.expansion-card[data-id="bateria"]');
   await page.waitForSelector('#ui-expansion-done', { timeout: 3000 });
   await page.click('#ui-expansion-done');

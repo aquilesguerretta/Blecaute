@@ -24,6 +24,8 @@ export interface BuildingDef {
   h: number;
   name: string;
   spriteKey?: string;
+  /** Laje de concreto sob o prédio (losango isométrico). Default: true. */
+  platform?: boolean;
 }
 
 export interface LightDef {

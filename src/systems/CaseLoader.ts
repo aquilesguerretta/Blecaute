@@ -99,6 +99,23 @@ function heightFor(key: string, fallback: number): number {
   return ASSET_HEIGHTS[key] ?? fallback;
 }
 
+/** Laje isométrica (losango 2:1) de concreto sob um prédio. */
+function addPlatform(scene: Phaser.Scene, cx: number, baseY: number, vizWidth: number, depth: number): void {
+  const w = vizWidth * 1.1;
+  const h = w / 2;
+  const pts = [
+    new Phaser.Geom.Point(cx, baseY - h / 2),
+    new Phaser.Geom.Point(cx + w / 2, baseY),
+    new Phaser.Geom.Point(cx, baseY + h / 2),
+    new Phaser.Geom.Point(cx - w / 2, baseY),
+  ];
+  const g = scene.add.graphics().setDepth(depth);
+  g.fillStyle(0x2a2520, 0.9);
+  g.fillPoints(pts, true);
+  g.lineStyle(2, 0x3a342c, 1);
+  g.strokePoints(pts, true);
+}
+
 interface LabelOpts {
   size: number;
   wrap?: number;
@@ -197,6 +214,9 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
       // a base cobre o footprint — não usar altura-alvo aqui (criaria paredes
       // invisíveis quando a arte ficasse mais estreita que o colisor).
       const img = scene.add.image(cx, baseY, b.spriteKey!).setOrigin(0.5, 1).setDepth(baseY);
+      if (b.platform !== false) {
+        addPlatform(scene, cx, baseY, img.displayWidth, baseY - 2);
+      }
       addContactShadow(scene, img); // cola o prédio ao chão
       collider = scene.add.rectangle(cx, cy, b.w, b.h); // invisível, só física
       addLabel(scene, cx, baseY - img.displayHeight - 6, b.name, baseY + 1, {
@@ -211,6 +231,9 @@ export function buildWorld(scene: Phaser.Scene, c: Case): BuiltWorld {
       scene.add
         .rectangle(cx, cy - 8, b.w - 16, b.h - 26, WORLD_COLORS.buildingTop)
         .setDepth(baseY + 0.5);
+      if (b.platform !== false) {
+        addPlatform(scene, cx, baseY, b.w, baseY - 2);
+      }
       addContactShadow(scene, { x: cx, y: baseY, displayWidth: b.w, depth: baseY });
       addLabel(scene, cx, cy, b.name, baseY + 1, { size: 13, wrap: b.w - 14, middle: true });
     }

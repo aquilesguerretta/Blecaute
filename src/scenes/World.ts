@@ -6,6 +6,7 @@ import {
   CHIBI,
   COMPANION,
   DEFAULT_CHIBI_HEIGHT,
+  DEPTHS,
   EXPANSIONS,
   INTERACT,
   PLAYER,
@@ -60,6 +61,8 @@ export class World extends Phaser.Scene {
   private expansion: ExpansionCard | null = null;
   private playerShadow!: ContactShadow;
   private npcs: SpawnedNpc[] = [];
+  private grade!: Phaser.GameObjects.Rectangle;
+  private vignette!: Phaser.GameObjects.Image;
 
   constructor() {
     super('World');
@@ -106,8 +109,23 @@ export class World extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, w, h);
     this.cameras.main.startFollow(this.player, true, CAMERA.lerp, CAMERA.lerp);
     this.cameras.main.setDeadzone(CAMERA.deadzoneW, CAMERA.deadzoneH);
+
+    // FX de tela: grade de cor (MULTIPLY) + vinheta, fixos na câmera, sem input
+    const { width: vw, height: vh } = this.scale.gameSize;
+    this.grade = this.add
+      .rectangle(vw / 2, vh / 2, vw, vh, 0x1a1530, 0.18)
+      .setScrollFactor(0)
+      .setBlendMode(Phaser.BlendModes.MULTIPLY)
+      .setDepth(DEPTHS.grade);
+    this.vignette = this.add
+      .image(vw / 2, vh / 2, 'tex-vignette')
+      .setScrollFactor(0)
+      .setDepth(DEPTHS.vignette);
+    this.fitScreenFx();
+
     this.applyView();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.applyView, this);
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.fitScreenFx, this);
 
     this.saci = new Companion(this, w / 2 + 34, h / 2 + 10);
 
@@ -118,6 +136,7 @@ export class World extends Phaser.Scene {
     this.dialogue = new DialogueSystem(this.ui);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off(Phaser.Scale.Events.RESIZE, this.applyView, this);
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.fitScreenFx, this);
       this.ui.destroy();
       this.expansion?.destroy();
       this.expansion = null;
@@ -329,6 +348,13 @@ export class World extends Phaser.Scene {
     const { width, height } = this.scale.gameSize;
     const { w, h } = this.caseData.world;
     this.cameras.main.setZoom(worldZoom(width, height, w, h));
+  }
+
+  /** Cobre a viewport com a grade de cor e a vinheta (chamado no create/resize). */
+  private fitScreenFx(): void {
+    const { width, height } = this.scale.gameSize;
+    this.grade.setPosition(width / 2, height / 2).setSize(width, height);
+    this.vignette.setPosition(width / 2, height / 2).setDisplaySize(width, height);
   }
 
   private gotoMap(): void {

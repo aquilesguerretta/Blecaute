@@ -22,6 +22,7 @@ export class Boot extends Phaser.Scene {
     this.makeLightParts();
     this.makeProps();
     this.makeDevice();
+    this.makeVignette();
 
     const manifest = this.cache.json.get('asset-manifest') as unknown;
     const keys = Array.isArray(manifest)
@@ -153,6 +154,29 @@ export class Boot extends Phaser.Scene {
     barrel.fillRect(2, 19, 20, 3);
     barrel.generateTexture('tex-barrel', 24, 30);
     barrel.destroy();
+  }
+
+  /** Textura de vinheta (gradiente radial transparente -> preto nas bordas). */
+  private makeVignette(): void {
+    const size = 256;
+    const tex = this.textures.createCanvas('tex-vignette', size, size);
+    if (!tex) {
+      return;
+    }
+    const ctx = tex.getContext();
+    const grad = ctx.createRadialGradient(
+      size / 2,
+      size / 2,
+      size * 0.3,
+      size / 2,
+      size / 2,
+      size * 0.62,
+    );
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.45)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+    tex.refresh();
   }
 
   private makeDevice(): void {

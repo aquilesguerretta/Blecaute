@@ -118,7 +118,9 @@ export const DEPTHS = {
   deco: -9,
   // atores, props e prédios usam depth = y (y-sort)
   glow: 5000,
-  joystick: 9000,
+  grade: 8000, // grade de cor (acima do mundo)
+  vignette: 8001, // vinheta (acima da grade)
+  joystick: 9000, // joystick desenha por cima dos FX de tela
 } as const;
 
 export const UI = {

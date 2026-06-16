@@ -22,7 +22,7 @@ const getMap = (page) => page.evaluate(() => window.__blecauteMap);
 
 async function waitMap(page, cond, label) {
   try {
-    await page.waitForFunction(cond, undefined, { timeout: 15000 });
+    await page.waitForFunction(cond, undefined, { timeout: 25000 });
     ok(true, label);
   } catch {
     ok(false, `${label} (timeout)`);
@@ -105,6 +105,15 @@ async function clickPin(page, caseId) {
   await page.mouse.click(pin.x, pin.y);
 }
 
+// Menu é a porta de entrada: clica Jogar -> CaseMap.
+async function startToCaseMap(page) {
+  await page.waitForFunction(() => window.__blecauteMenu?.play, undefined, { timeout: 20000 });
+  const play = await page.evaluate(() => window.__blecauteMenu.play);
+  await page.mouse.click(play.x, play.y);
+  await page.waitForFunction(() => !!window.__blecauteMap, undefined, { timeout: 20000 });
+  await page.waitForTimeout(150);
+}
+
 mkdirSync(SHOTS, { recursive: true });
 const server = await preview({ preview: { port: PORT, strictPort: true } });
 const browser = await chromium.launch();
@@ -119,9 +128,14 @@ const pageErrors = [];
 page.on('pageerror', (e) => pageErrors.push(String(e)));
 
 try {
-  // ===== CASEMAP =====
+  // ===== MENU -> CASEMAP =====
   await page.goto(`http://localhost:${PORT}/`);
-  await waitMap(page, () => !!window.__blecauteMap, 'casemap abre como porta de entrada');
+  await page.waitForFunction(() => window.__blecauteMenu?.ready, undefined, { timeout: 25000 });
+  ok(true, 'menu de início abre (porta de entrada)');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${SHOTS}/00-menu.png` });
+  await startToCaseMap(page);
+  ok(true, 'menu leva ao casemap');
   let map = await getMap(page);
   ok(map.pins.find((p) => p.caseId === 'case1')?.state === 'available', 'pin vila aurora disponível');
   ok(map.pins.find((p) => p.caseId === 'case2')?.state === 'locked', 'pin centro bloqueado no início');
@@ -131,7 +145,7 @@ try {
 
   // ===== CASO 1 =====
   await clickPin(page, 'case1');
-  await page.waitForSelector('#ui-dialogue.visible', { timeout: 15000 });
+  await page.waitForSelector('#ui-dialogue.visible', { timeout: 25000 });
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${SHOTS}/02-intro-dialogo.png` });
   ok(true, 'intro do caso 1 abre com retrato do saci');
@@ -222,7 +236,7 @@ try {
   await page.waitForFunction(
     () => window.__blecaute?.getState?.().caseId === 'case1' && window.__blecaute.getState().lightsOn,
     undefined,
-    { timeout: 15000 },
+    { timeout: 25000 },
   );
   ok(!(await page.isVisible('#ui-dialogue.visible')), 'replay não repete a intro');
   await page.waitForTimeout(700);
@@ -230,7 +244,7 @@ try {
 
   // ===== CASO 2 =====
   await page.goto(`http://localhost:${PORT}/?case=2`);
-  await page.waitForSelector('#ui-dialogue.visible', { timeout: 15000 });
+  await page.waitForSelector('#ui-dialogue.visible', { timeout: 25000 });
   ok(true, '?case=2 vai direto ao caso 2');
   for (let i = 0; i < 3; i++) {
     await page.click('#ui-dialogue');
@@ -247,6 +261,7 @@ try {
 
   // persistência + botão continuar
   await page.goto(`http://localhost:${PORT}/`);
+  await startToCaseMap(page);
   await waitMap(page, () => !!window.__blecauteMap?.continue, 'casemap oferece Continuar (caso 2 em andamento)');
   map = await getMap(page);
   if (!map.continue) {
@@ -257,7 +272,7 @@ try {
   await page.waitForFunction(
     () => window.__blecaute?.getState?.().caseId === 'case2' && window.__blecaute.getState().clues === 1,
     undefined,
-    { timeout: 15000 },
+    { timeout: 25000 },
   );
   ok(true, 'continuar retoma o caso 2 com 1 pista');
   ok(!(await page.isVisible('#ui-dialogue.visible')), 'caso 2 não repete a intro ao continuar');

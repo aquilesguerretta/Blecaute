@@ -153,6 +153,9 @@ export const STRINGS = {
   expansionHint: 'O caso fechou. Como a cidade investe agora?',
   expansionConfirm: 'Sua escolha moldará a cidade.',
   expansionBack: 'Voltar ao mapa',
+  play: 'Jogar',
+  controlsDesktop: 'WASD / setas para andar · E para interagir',
+  controlsTouch: 'Toque e arraste para andar',
 } as const;
 
 // ===== Decisões de expansão pós-caso (efeito real chega no Brief #3) =====

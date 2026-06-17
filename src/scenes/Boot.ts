@@ -50,12 +50,19 @@ export class Boot extends Phaser.Scene {
       this.load.image(key, `assets/${key}.png`);
     }
     for (const file of list('media-manifest')) {
-      const key = file.replace(/\.[^.]+$/, '');
-      const ext = file.split('.').pop()?.toLowerCase() ?? '';
-      if (VIDEO_EXT.has(ext)) {
-        this.load.video(key, `assets/${file}`);
-      } else {
-        this.load.audio(key, `assets/${file}`);
+      // this.load.video CONSTRÓI o VideoFile de forma SÍNCRONA e estoura
+      // (TypeError) se o navegador não tem o codec — o try/catch impede que
+      // isso aborte o create() antes da rede de segurança ser instalada.
+      try {
+        const key = file.replace(/\.[^.]+$/, '');
+        const ext = file.split('.').pop()?.toLowerCase() ?? '';
+        if (VIDEO_EXT.has(ext)) {
+          this.load.video(key, `assets/${file}`);
+        } else {
+          this.load.audio(key, `assets/${file}`);
+        }
+      } catch {
+        // formato não suportado pelo navegador: ignora e segue o boot
       }
     }
     // mídia faltante/indecodificável não pode travar o boot

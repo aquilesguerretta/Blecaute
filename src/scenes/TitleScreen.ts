@@ -183,7 +183,9 @@ export class TitleScreen extends Phaser.Scene {
       this.video = vid;
       let revealed = false;
       const reveal = (): void => {
-        if (revealed || !this.video) {
+        // guarda contra a cena/vídeo já destruídos (toque inicia antes do
+        // primeiro 'timeupdate' -> SHUTDOWN antes do reveal)
+        if (revealed || !this.alive || !this.video || !this.video.active) {
           return;
         }
         revealed = true;

@@ -169,6 +169,8 @@ export const STRINGS = {
   controlsTouch: 'Toque e arraste para andar',
   titleStart: 'Toque para começar',
   titleContinue: 'Toque para continuar',
+  titlePlay: 'JOGAR',
+  titleResume: 'CONTINUAR',
 } as const;
 
 // ===== Decisões de expansão pós-caso (efeito real chega no Brief #3) =====

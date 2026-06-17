@@ -105,11 +105,16 @@ async function clickPin(page, caseId) {
   await page.mouse.click(pin.x, pin.y);
 }
 
-// TitleScreen é a porta de entrada: um toque inicia -> CaseMap.
+// TitleScreen: 1º toque pula o vídeo (mostra JOGAR no último frame); o 2º
+// (no JOGAR) vai para o CaseMap.
 async function startToCaseMap(page) {
   await page.waitForFunction(() => window.__blecauteTitle?.ready, undefined, { timeout: 20000 });
   const vp = page.viewportSize();
-  await page.mouse.click(Math.round(vp.width / 2), Math.round(vp.height / 2));
+  const cx = Math.round(vp.width / 2);
+  const cy = Math.round(vp.height / 2);
+  await page.mouse.click(cx, cy);
+  await page.waitForFunction(() => window.__blecauteTitle?.ended, undefined, { timeout: 12000 });
+  await page.mouse.click(cx, cy);
   await page.waitForFunction(() => !!window.__blecauteMap, undefined, { timeout: 20000 });
   await page.waitForTimeout(150);
 }
@@ -134,15 +139,21 @@ try {
   ok(true, 'boot leva à TitleScreen (porta de entrada)');
   // fallback gracioso: AudioManager responde mesmo sem arquivos de áudio
   ok((await page.evaluate(() => window.__audioTest?.())) === true, 'AudioManager responde sem arquivos');
-  await page.waitForTimeout(900);
-  await page.screenshot({ path: `${SHOTS}/00-title.png` });
-  // transição cinematográfica: toca e captura o meio do fade
+  await page.waitForTimeout(1200);
+  await page.screenshot({ path: `${SHOTS}/00-title.png` }); // vídeo rodando
+  // pula o vídeo -> JOGAR escrito no último frame
   const vp0 = page.viewportSize();
-  await page.mouse.click(Math.round(vp0.width / 2), Math.round(vp0.height / 2));
-  await page.waitForTimeout(190);
-  await page.screenshot({ path: `${SHOTS}/00b-title-transition.png` });
+  const cx0 = Math.round(vp0.width / 2);
+  const cy0 = Math.round(vp0.height / 2);
+  await page.mouse.click(cx0, cy0);
+  await page.waitForFunction(() => window.__blecauteTitle?.ended, undefined, { timeout: 12000 });
+  ok(true, 'vídeo termina/pula e revela o JOGAR no último frame');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${SHOTS}/00b-title-jogar.png` });
+  // clica JOGAR -> CaseMap
+  await page.mouse.click(cx0, cy0);
   await page.waitForFunction(() => !!window.__blecauteMap, undefined, { timeout: 20000 });
-  ok(true, 'tocar na TitleScreen transiciona para o CaseMap');
+  ok(true, 'clicar em JOGAR transiciona para o CaseMap');
   let map = await getMap(page);
   ok(map.pins.find((p) => p.caseId === 'case1')?.state === 'available', 'pin vila aurora disponível');
   ok(map.pins.find((p) => p.caseId === 'case2')?.state === 'locked', 'pin centro bloqueado no início');

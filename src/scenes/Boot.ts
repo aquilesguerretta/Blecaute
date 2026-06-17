@@ -92,7 +92,7 @@ export class Boot extends Phaser.Scene {
     if (fromQuery) {
       this.scene.start('World', { caseId: fromQuery });
     } else {
-      this.scene.start('Menu');
+      this.scene.start('TitleScreen');
     }
   }
 

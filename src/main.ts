@@ -3,7 +3,6 @@ import Phaser from 'phaser';
 import { GAME } from './config';
 import { Boot } from './scenes/Boot';
 import { TitleScreen } from './scenes/TitleScreen';
-import { Menu } from './scenes/Menu';
 import { CaseMap } from './scenes/CaseMap';
 import { World } from './scenes/World';
 
@@ -35,5 +34,5 @@ new Phaser.Game({
     roundPixels: true,
     antialias: true,
   },
-  scene: [Boot, TitleScreen, Menu, CaseMap, World],
+  scene: [Boot, TitleScreen, CaseMap, World],
 });

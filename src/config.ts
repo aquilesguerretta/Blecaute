@@ -29,15 +29,29 @@ export function isDesktopPointer(): boolean {
 }
 
 /**
- * Zoom da câmera a partir do viewport: mira uma altura de mundo confortável,
- * mas nunca deixa "vazar" o mundo (cobre a viewport quando o mundo é menor).
+ * devicePixelRatio limitado: o jogo renderiza nesta densidade (canvas físico)
+ * e o CSS reduz de volta -> nitidez em telas retina. Cap em 2 p/ não estourar
+ * o tamanho do canvas (perf) em telas DPR 3+.
+ */
+export function dpr(): number {
+  const d = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+  return Math.min(Math.max(1, d), 2);
+}
+
+/**
+ * Zoom da câmera a partir do viewport FÍSICO (gameSize já inclui o dpr): mira
+ * uma altura de mundo confortável (em px lógicos) sem deixar "vazar" o mundo,
+ * e devolve o zoom físico (× dpr) para renderizar nítido.
  */
 export function worldZoom(viewW: number, viewH: number, worldW: number, worldH: number): number {
-  const landscape = viewW >= viewH;
+  const d = dpr();
+  const lw = viewW / d;
+  const lh = viewH / d;
+  const landscape = lw >= lh;
   const targetH = landscape ? VIEW.targetWorldH_landscape : VIEW.targetWorldH_portrait;
-  const cover = Math.max(viewW / worldW, viewH / worldH); // mínimo p/ não mostrar vazio
-  const z = Math.max(viewH / targetH, cover);
-  return Phaser.Math.Clamp(z, VIEW.minZoom, VIEW.maxZoom);
+  const cover = Math.max(lw / worldW, lh / worldH); // mínimo p/ não mostrar vazio
+  const z = Math.max(lh / targetH, cover);
+  return Phaser.Math.Clamp(z, VIEW.minZoom, VIEW.maxZoom) * d;
 }
 
 export const PLAYER = {

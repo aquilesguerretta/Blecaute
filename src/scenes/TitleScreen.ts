@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { STRINGS } from '../config';
+import { STRINGS, dpr } from '../config';
 import { audio } from '../systems/AudioManager';
 import { loadSave } from '../systems/SaveState';
 
@@ -30,6 +30,7 @@ export class TitleScreen extends Phaser.Scene {
   private subtitle!: Phaser.GameObjects.Text;
   private jogar!: Phaser.GameObjects.Text;
   private fallbackEls: Array<Phaser.GameObjects.Image | Phaser.GameObjects.Text> = [];
+  private d = dpr(); // canvas é físico; textos/sprites de tela escalam junto
 
   constructor() {
     super('TitleScreen');
@@ -55,15 +56,15 @@ export class TitleScreen extends Phaser.Scene {
 
     // logo + subtítulo (só no fallback; o vídeo já traz o logo dele)
     if (this.textures.exists('logo_blecaute')) {
-      this.logo = this.add.image(W / 2, 0, 'logo_blecaute').setDepth(10);
+      this.logo = this.add.image(W / 2, 0, 'logo_blecaute').setScale(this.d).setDepth(10);
     } else {
       this.logo = this.add
         .text(W / 2, 0, 'BLECAUTE', {
           fontFamily: TITLE_FONT,
-          fontSize: '64px',
+          fontSize: `${64 * this.d}px`,
           color: '#ffd23f',
           stroke: '#0d0a02',
-          strokeThickness: 8,
+          strokeThickness: 8 * this.d,
         })
         .setOrigin(0.5)
         .setDepth(10);
@@ -71,7 +72,7 @@ export class TitleScreen extends Phaser.Scene {
     this.subtitle = this.add
       .text(W / 2, 0, STRINGS.subtitle, {
         fontFamily: "system-ui, 'Segoe UI', sans-serif",
-        fontSize: '16px',
+        fontSize: `${16 * this.d}px`,
         fontStyle: 'italic',
         color: '#e6e0d2',
       })
@@ -84,10 +85,10 @@ export class TitleScreen extends Phaser.Scene {
     this.jogar = this.add
       .text(W / 2, H * PLAQUE_Y, hasProgress ? STRINGS.titleResume : STRINGS.titlePlay, {
         fontFamily: TITLE_FONT,
-        fontSize: '40px',
+        fontSize: `${40 * this.d}px`,
         color: '#fac775',
         stroke: '#0d0a02',
-        strokeThickness: 6,
+        strokeThickness: 6 * this.d,
       })
       .setOrigin(0.5)
       .setDepth(20)
@@ -138,6 +139,12 @@ export class TitleScreen extends Phaser.Scene {
       vid.play(false);
       this.video = vid;
       vid.on(Phaser.GameObjects.Events.VIDEO_COMPLETE, () => this.showJogar());
+      // dimensões nativas só existem após o metadata -> redimensiona aí
+      vid.on('metadata', () => {
+        if (this.alive) {
+          this.layout();
+        }
+      });
 
       let revealed = false;
       const reveal = (): void => {
@@ -223,12 +230,13 @@ export class TitleScreen extends Phaser.Scene {
     };
     cover(this.bg);
 
-    // logo/subtítulo (fallback)
-    this.logo.setPosition(W / 2, Math.max(100, H * 0.16));
-    const logoH = this.textures.exists('logo_blecaute') ? 104 : 64;
-    this.subtitle.setPosition(W / 2, this.logo.y + logoH / 2 + 20);
+    // logo/subtítulo (fallback) — offsets em px físicos (× dpr)
+    this.logo.setPosition(W / 2, Math.max(100 * this.d, H * 0.16));
+    const logoH = (this.textures.exists('logo_blecaute') ? 104 : 64) * this.d;
+    this.subtitle.setPosition(W / 2, this.logo.y + logoH / 2 + 20 * this.d);
 
-    // vídeo em CONTAIN (frame inteiro, sem cortar/esticar; letterbox escuro)
+    // vídeo em CONTAIN (frame INTEIRO, sem cortar o logo nem esticar;
+    // letterbox escuro). A nitidez vem do render em alta-DPI (ver main.ts).
     let jx = W / 2;
     let jy = H * PLAQUE_Y;
     if (this.video) {
@@ -238,10 +246,10 @@ export class TitleScreen extends Phaser.Scene {
       const dispW = vw * s;
       const dispH = vh * s;
       this.video.setPosition(W / 2, H / 2).setDisplaySize(dispW, dispH);
-      jx = (W - dispW) / 2 + dispW * PLAQUE_X;
+      jx = (W - dispW) / 2 + dispW * PLAQUE_X; // = W/2 (banner centralizado)
       jy = (H - dispH) / 2 + dispH * PLAQUE_Y;
     } else if (!this.videoMode) {
-      jy = this.subtitle.y + 110; // posição do JOGAR no fallback
+      jy = H * 0.62; // JOGAR centralizado no fallback
     }
     this.jogar.setPosition(jx, jy);
   }
@@ -258,10 +266,11 @@ export class TitleScreen extends Phaser.Scene {
   }
 
   private publish(): void {
+    // coords em px de TELA (CSS) p/ o e2e clicar (canvas é físico = × dpr)
     (window as unknown as Record<string, unknown>).__blecauteTitle = {
       ready: true,
       ended: this.ended,
-      jogar: { x: this.jogar.x, y: this.jogar.y },
+      jogar: { x: this.jogar.x / this.d, y: this.jogar.y / this.d },
     };
   }
 
@@ -289,7 +298,7 @@ export class TitleScreen extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(2)
       .setBlendMode(Phaser.BlendModes.ADD)
-      .setScale(Phaser.Math.FloatBetween(0.28, 0.6))
+      .setScale(Phaser.Math.FloatBetween(0.28, 0.6) * this.d)
       .setAlpha(0);
     this.tweens.add({
       targets: s,

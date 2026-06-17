@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { DEPTHS, JOYSTICK } from '../config';
+import { DEPTHS, JOYSTICK, dpr } from '../config';
 
 /**
  * Joystick flutuante estilo Among Us: o primeiro toque em qualquer ponto do
@@ -16,6 +16,12 @@ export class VirtualJoystick {
   private out = new Phaser.Math.Vector2();
   private enabled = true;
   private touchEnabled: boolean;
+  // canvas é físico (× dpr); o joystick vive em coords de tela -> escala junto
+  private d = dpr();
+  private cap = JOYSTICK.cap * this.d;
+  private baseR = JOYSTICK.baseRadius * this.d;
+  private thumbR = JOYSTICK.thumbRadius * this.d;
+  private dead = JOYSTICK.deadzone * this.d;
 
   constructor(scene: Phaser.Scene, opts?: { touchEnabled?: boolean }) {
     this.scene = scene;
@@ -64,8 +70,8 @@ export class VirtualJoystick {
       const dx = this.stick.x - this.base.x;
       const dy = this.stick.y - this.base.y;
       const len = Math.hypot(dx, dy);
-      if (len > JOYSTICK.deadzone) {
-        const mag = Math.min(len, JOYSTICK.cap) / JOYSTICK.cap;
+      if (len > this.dead) {
+        const mag = Math.min(len, this.cap) / this.cap;
         this.out.set((dx / len) * mag, (dy / len) * mag);
       }
       return this.out;
@@ -92,16 +98,16 @@ export class VirtualJoystick {
     const len = Math.hypot(dx, dy);
     let tx = this.stick.x;
     let ty = this.stick.y;
-    if (len > JOYSTICK.cap) {
-      tx = this.base.x + (dx / len) * JOYSTICK.cap;
-      ty = this.base.y + (dy / len) * JOYSTICK.cap;
+    if (len > this.cap) {
+      tx = this.base.x + (dx / len) * this.cap;
+      ty = this.base.y + (dy / len) * this.cap;
     }
     this.gfx.fillStyle(JOYSTICK.color, JOYSTICK.baseAlpha);
-    this.gfx.fillCircle(this.base.x, this.base.y, JOYSTICK.baseRadius);
-    this.gfx.lineStyle(2, JOYSTICK.color, JOYSTICK.baseAlpha + 0.1);
-    this.gfx.strokeCircle(this.base.x, this.base.y, JOYSTICK.baseRadius);
+    this.gfx.fillCircle(this.base.x, this.base.y, this.baseR);
+    this.gfx.lineStyle(2 * this.d, JOYSTICK.color, JOYSTICK.baseAlpha + 0.1);
+    this.gfx.strokeCircle(this.base.x, this.base.y, this.baseR);
     this.gfx.fillStyle(JOYSTICK.color, JOYSTICK.thumbAlpha);
-    this.gfx.fillCircle(tx, ty, JOYSTICK.thumbRadius);
+    this.gfx.fillCircle(tx, ty, this.thumbR);
   }
 
   private onDown(p: Phaser.Input.Pointer): void {

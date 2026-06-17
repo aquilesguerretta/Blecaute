@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { CASE_PINS, PIN_COLORS, STRINGS, VIEW, type CasePin } from '../config';
+import { CASE_PINS, PIN_COLORS, STRINGS, VIEW, dpr, type CasePin } from '../config';
 import { centerDesign } from '../systems/Layout';
 import { loadSave } from '../systems/SaveState';
 
@@ -142,21 +142,24 @@ export class CaseMap extends Phaser.Scene {
     });
   }
 
-  /** Coordenadas de TELA dos pins (pós-transform do container) para o e2e. */
+  /** Coords de TELA (CSS) dos pins p/ o e2e — canvas é físico, divide por dpr. */
   private syncHook(): void {
+    const d = dpr();
     const ox = this.map.x;
     const oy = this.map.y;
     const s = this.map.scaleX;
+    const sx = (dx: number): number => (ox + dx * s) / d;
+    const sy = (dy: number): number => (oy + dy * s) / d;
     (window as unknown as Record<string, unknown>).__blecauteMap = {
       pins: this.pinHooks.map((p) => ({
         caseId: p.caseId,
         name: p.name,
         state: p.state,
-        x: ox + p.dx * s,
-        y: oy + p.dy * s,
+        x: sx(p.dx),
+        y: sy(p.dy),
       })),
       continue: this.continueDesign
-        ? { x: ox + this.continueDesign.x * s, y: oy + this.continueDesign.y * s }
+        ? { x: sx(this.continueDesign.x), y: sy(this.continueDesign.y) }
         : null,
     };
   }

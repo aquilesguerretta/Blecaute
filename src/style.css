@@ -248,6 +248,121 @@ body {
   font-style: italic;
 }
 
+/* --- escolhas de diálogo (parte G) --- */
+.dlg-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.dlg-choice {
+  width: 100%;
+  text-align: left;
+  background: #1a2030;
+  border: 2px solid #4a5575;
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #f4f1e8;
+  font-size: 16px;
+  font-weight: 600;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.dlg-choice:active {
+  border-color: #ffd23f;
+  background: #222a3e;
+}
+
+/* esconde o "toque para continuar" quando há escolhas */
+#ui-dialogue.has-choices .dlg-hint {
+  display: none;
+}
+
+/* --- abas e deduções do caderno (parte F) --- */
+.journal-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.journal-tabs .tab {
+  flex: 1;
+  min-height: 40px;
+  border-radius: 10px;
+  background: #1a2030;
+  border: 1px solid #39425e;
+  color: #c9c3b4;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.journal-tabs .tab.active {
+  background: #ffd23f;
+  color: #171204;
+  border-color: #0d0a02;
+}
+
+#ui-deduction-list {
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.deduction {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #1a2030;
+  border: 1px solid #39425e;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.deduction.available {
+  border-color: #ffd23f;
+}
+
+.deduction-line {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.deduction-line.locked {
+  letter-spacing: 4px;
+  color: #6b7280;
+}
+
+.deduction-state {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.deduction-state.done {
+  color: #46c46e;
+  font-weight: 700;
+}
+
+.btn-connect {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 8px 18px;
+  border-radius: 12px;
+  background: #ffd23f;
+  color: #171204;
+  font-size: 16px;
+  font-weight: 800;
+  border: 2px solid #0d0a02;
+  box-shadow: 0 3px 0 #0d0a02;
+  cursor: pointer;
+}
+
+.btn-connect:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #0d0a02;
+}
+
 /* --- folhas (caderno, acusação, vitória) --- */
 .sheet {
   margin: auto;

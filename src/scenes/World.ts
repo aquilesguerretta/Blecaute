@@ -1,5 +1,13 @@
 import Phaser from 'phaser';
-import type { Case, ClueDef, DialoguePage, InspectableDef, NpcDef } from '../data/schema';
+import type {
+  Case,
+  ClueDef,
+  DeductionDef,
+  DialoguePage,
+  InspectableDef,
+  NpcDef,
+  SuspectDef,
+} from '../data/schema';
 import {
   ASSET_HEIGHTS,
   CAMERA,
@@ -41,7 +49,7 @@ import {
   type CaseProgress,
   type SaveData,
 } from '../systems/SaveState';
-import { UIManager } from '../ui/UIManager';
+import { UIManager, type DeductionView } from '../ui/UIManager';
 
 export class World extends Phaser.Scene {
   private caseData!: Case;
@@ -137,6 +145,7 @@ export class World extends Phaser.Scene {
     this.ui = new UIManager(this.game.canvas, (key) => this.textures.exists(key));
     this.ui.setTitle(this.caseData.title);
     this.dialogue = new DialogueSystem(this.ui);
+    this.dialogue.hasClue = (id) => this.journal.has(id);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off(Phaser.Scale.Events.RESIZE, this.applyView, this);
       this.scale.off(Phaser.Scale.Events.RESIZE, this.fitScreenFx, this);
@@ -154,12 +163,7 @@ export class World extends Phaser.Scene {
     };
     this.ui.setClues(this.journal.count, this.journal.total);
     this.journal.restore(this.prog.clues);
-    this.ui.onCluesClick = () => {
-      if (!this.ui.isModalOpen()) {
-        this.ui.showJournal(this.journal.texts());
-        this.journal.markAllRead();
-      }
-    };
+    this.ui.onCluesClick = () => this.openJournal();
 
     this.interactables = new Interactables();
     for (const { def } of built.npcs) {
@@ -277,12 +281,12 @@ export class World extends Phaser.Scene {
   private talkToNpc(def: NpcDef): void {
     this.talkedNpcs.add(def.id);
     const portraitKey = def.portraitKey ?? `portrait_${def.id}`;
-    const pages = def.dialogue.map((text) => ({
-      speaker: def.name,
-      text,
-      color: def.color,
-      portraitKey,
-    }));
+    // string = página simples; objeto = página completa (choices/goto/end)
+    const pages: DialoguePage[] = def.dialogue.map((d) =>
+      typeof d === 'string'
+        ? { speaker: def.name, text: d, color: def.color, portraitKey }
+        : { portraitKey, ...d, speaker: d.speaker ?? def.name, color: d.color ?? def.color },
+    );
     this.dialogue.open(pages, () => this.collectClue(def.clue));
   }
 
@@ -304,6 +308,37 @@ export class World extends Phaser.Scene {
     }
   }
 
+  /** Abre o caderno com a aba de Deduções (parte F). */
+  private openJournal(): void {
+    if (this.ui.isModalOpen()) {
+      return;
+    }
+    const deductions: DeductionView[] = (this.caseData.deductions ?? []).map((d) => {
+      const met = d.requires.filter((r) => this.journal.has(r)).length;
+      const done = this.journal.has(d.unlocks_clue);
+      const available = !done && met === d.requires.length;
+      return {
+        line: d.saci_line,
+        state: done ? 'done' : available ? 'available' : 'locked',
+        met,
+        total: d.requires.length,
+        onConnect: available ? () => this.connectDeduction(d) : undefined,
+      };
+    });
+    this.ui.showJournal(this.journal.texts(), deductions);
+    this.journal.markAllRead();
+  }
+
+  private connectDeduction(d: DeductionDef): void {
+    this.ui.hideJournal();
+    this.dialogue.open([this.saciPage(d.saci_line)], () => {
+      if (this.journal.add({ id: d.unlocks_clue, text: d.clue_text ?? d.saci_line })) {
+        this.ui.toast(STRINGS.newDeduction);
+        this.vibrate([40, 30, 80]);
+      }
+    });
+  }
+
   private vibrate(pattern: number | number[]): void {
     if ('vibrate' in navigator) {
       try {
@@ -321,6 +356,10 @@ export class World extends Phaser.Scene {
       color: COMPANION.portrait,
       portraitKey: 'portrait_saci',
     };
+  }
+
+  private suspectPage(s: SuspectDef, text: string): DialoguePage {
+    return { speaker: s.name, text, color: '#7a3b3b', portraitKey: s.portraitKey };
   }
 
   private talkToSaci(): void {
@@ -356,12 +395,24 @@ export class World extends Phaser.Scene {
       return;
     }
     if (!suspect.correct) {
-      this.dialogue.open([this.saciPage(suspect.rebuttal ?? STRINGS.rebuttalFallback)]);
+      // réplica do PRÓPRIO suspeito (parte H) + comentário do Saci
+      const wrong: DialoguePage[] = [];
+      if (suspect.accuse_wrong) {
+        wrong.push(this.suspectPage(suspect, suspect.accuse_wrong));
+      }
+      wrong.push(this.saciPage(suspect.rebuttal ?? STRINGS.rebuttalFallback));
+      this.dialogue.open(wrong);
       return;
     }
     this.cameras.main.flash(220, 255, 240, 180);
     this.vibrate([40, 30, 80]);
-    this.dialogue.open([this.saciPage(this.caseData.victory.reveal)], () => {
+    // confissão do culpado antes do reveal das luzes (parte H)
+    const reveal: DialoguePage[] = [];
+    if (suspect.accuse_right_confession) {
+      reveal.push(this.suspectPage(suspect, suspect.accuse_right_confession));
+    }
+    reveal.push(this.saciPage(this.caseData.victory.reveal));
+    this.dialogue.open(reveal, () => {
       this.prog.solved = true;
       if (!this.save.casesCompleted.includes(this.caseId)) {
         this.save.casesCompleted.push(this.caseId);

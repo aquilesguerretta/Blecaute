@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import case1 from '../data/case1.json';
 import case2 from '../data/case2.json';
+import case3 from '../data/case3.json';
 import type { Case, InspectableDef, LightDef, NpcDef } from '../data/schema';
 import {
   ASSET_HEIGHTS,
@@ -18,7 +19,7 @@ import {
 import { addContactShadow, type ContactShadow } from './Shadow';
 
 // Registro de casos disponíveis. Novos casos: importar o JSON e listar aqui.
-const CASES: Record<string, unknown> = { case1, case2 };
+const CASES: Record<string, unknown> = { case1, case2, case3 };
 
 export function loadCase(id: string): Case {
   const data = CASES[id];
@@ -50,6 +51,10 @@ export function clueIndex(c: Case): Map<string, string> {
     if (ins.clue) {
       map.set(ins.clue.id, ins.clue.text);
     }
+  }
+  // pistas deduzidas também contam para o total (e têm texto p/ o restore)
+  for (const d of c.deductions ?? []) {
+    map.set(d.unlocks_clue, d.clue_text ?? d.saci_line);
   }
   return map;
 }

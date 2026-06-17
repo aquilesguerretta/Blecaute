@@ -163,6 +163,7 @@
       "name": "Dona Marta",
       "desc": "Moradora antiga da vila. Reclama das quedas às 19h e da conta que só sobe.",
       "correct": false,
+      "accuse_wrong": "Eu?! Eu PAGO a conta dos outros no rateio e ainda viro suspeita?!",
       "rebuttal": "A mulher tá PAGANDO a conta dos outros no rateio, criatura!"
     },
     {
@@ -170,13 +171,15 @@
       "name": "Seu Tonho",
       "desc": "Vizinho do galpão. Ouviu o poste zumbir e viu faísca.",
       "correct": false,
+      "accuse_wrong": "Moço, eu só OUVI o zumbido! Vai lá ver o poste, não me enche.",
       "rebuttal": "O homem só OUVIU o zumbido. Testemunha, não culpado."
     },
     {
       "id": "dono_galpao",
       "name": "Dono do Galpão",
       "desc": "Liga máquinas a noite inteira e se gaba de nunca pagar conta de luz.",
-      "correct": true
+      "correct": true,
+      "accuse_right_confession": "...Tá bom. Fui eu. Puxei um gato direto no trafo. A conta tava cara demais, ué."
     }
   ],
   "victory": {

@@ -1,5 +1,14 @@
-import type { DialoguePage, SuspectDef } from '../data/schema';
+import type { DialogueChoice, DialoguePage, SuspectDef } from '../data/schema';
 import { STRINGS, UI, isDesktopPointer } from '../config';
+
+export interface DeductionView {
+  /** Conclusão da dedução (saci_line) — só revelada quando disponível/feita. */
+  line: string;
+  state: 'done' | 'available' | 'locked';
+  met: number;
+  total: number;
+  onConnect?: () => void;
+}
 
 // fallback quando o asset de ícone não está disponível
 const ICON_EMOJI: Record<string, string> = {
@@ -49,9 +58,14 @@ export class UIManager {
   private dlgName: HTMLDivElement;
   private dlgText: HTMLDivElement;
   private dlgPage: HTMLSpanElement;
+  private dlgChoices: HTMLDivElement;
 
   private journalEl: HTMLDivElement;
   private journalList: HTMLUListElement;
+  private journalTabs: HTMLDivElement;
+  private tabClues: HTMLButtonElement;
+  private tabDeductions: HTMLButtonElement;
+  private deductionList: HTMLDivElement;
 
   private accuseEl: HTMLDivElement;
   private accuseList: HTMLDivElement;
@@ -113,6 +127,8 @@ export class UIManager {
     const meta = el('div', 'dlg-meta', dlgBody);
     this.dlgPage = el('span', '', meta);
     el('span', 'dlg-hint', meta, STRINGS.continueHint);
+    this.dlgChoices = el('div', 'dlg-choices', dlgBody);
+    this.dlgChoices.style.display = 'none';
     this.dialogueEl.addEventListener('click', () => this.onDialogueTap?.());
 
     // caderno de pistas
@@ -120,8 +136,21 @@ export class UIManager {
     this.journalEl.id = 'ui-journal';
     const jSheet = el('div', 'sheet', this.journalEl);
     el('h2', '', jSheet, STRINGS.journalTitle);
+    // abas Pistas / Deduções (a barra só aparece quando há deduções)
+    this.journalTabs = el('div', 'journal-tabs', jSheet);
+    this.journalTabs.style.display = 'none';
+    this.tabClues = el('button', 'tab active', this.journalTabs, STRINGS.cluesTab);
+    this.tabClues.type = 'button';
+    this.tabDeductions = el('button', 'tab', this.journalTabs, STRINGS.deductionsTab);
+    this.tabDeductions.id = 'ui-tab-deductions';
+    this.tabDeductions.type = 'button';
+    this.tabClues.addEventListener('click', () => this.selectJournalTab('clues'));
+    this.tabDeductions.addEventListener('click', () => this.selectJournalTab('deductions'));
     this.journalList = el('ul', '', jSheet);
     this.journalList.id = 'ui-journal-list';
+    this.deductionList = el('div', '', jSheet);
+    this.deductionList.id = 'ui-deduction-list';
+    this.deductionList.style.display = 'none';
     const jClose = el('button', 'btn-secondary', jSheet, STRINGS.close);
     jClose.id = 'ui-journal-close';
     jClose.type = 'button';
@@ -228,7 +257,7 @@ export class UIManager {
     this.dialogueEl.classList.remove('visible');
   }
 
-  showJournal(texts: string[]): void {
+  showJournal(texts: string[], deductions: DeductionView[] = []): void {
     this.journalList.replaceChildren();
     if (texts.length === 0) {
       el('li', 'empty', this.journalList, STRINGS.journalEmpty);
@@ -237,11 +266,64 @@ export class UIManager {
         el('li', '', this.journalList, t);
       }
     }
+
+    this.deductionList.replaceChildren();
+    if (deductions.length > 0) {
+      this.journalTabs.style.display = 'flex';
+      for (const d of deductions) {
+        const row = el('div', `deduction ${d.state}`, this.deductionList);
+        if (d.state === 'locked') {
+          el('span', 'deduction-line locked', row, '???');
+          el('span', 'deduction-state', row, STRINGS.deductionLocked(d.met, d.total));
+        } else {
+          el('span', 'deduction-line', row, d.line);
+          if (d.state === 'done') {
+            el('span', 'deduction-state done', row, STRINGS.deductionDone);
+          } else {
+            const btn = el('button', 'btn-connect', row, STRINGS.connect);
+            btn.type = 'button';
+            btn.addEventListener('click', () => d.onConnect?.());
+          }
+        }
+      }
+    } else {
+      this.journalTabs.style.display = 'none';
+    }
+    this.selectJournalTab('clues');
     this.journalEl.classList.add('visible');
+  }
+
+  private selectJournalTab(tab: 'clues' | 'deductions'): void {
+    const clues = tab === 'clues';
+    this.tabClues.classList.toggle('active', clues);
+    this.tabDeductions.classList.toggle('active', !clues);
+    this.journalList.style.display = clues ? 'flex' : 'none';
+    this.deductionList.style.display = clues ? 'none' : 'flex';
   }
 
   hideJournal(): void {
     this.journalEl.classList.remove('visible');
+  }
+
+  /** Mostra os botões de escolha de um diálogo ramificado (parte G). */
+  showChoices(choices: DialogueChoice[], onPick: (choice: DialogueChoice) => void): void {
+    this.dlgChoices.replaceChildren();
+    for (const c of choices) {
+      const btn = el('button', 'dlg-choice', this.dlgChoices, c.text);
+      btn.type = 'button';
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); // não deixa o tap de avanço do diálogo disparar
+        onPick(c);
+      });
+    }
+    this.dlgChoices.style.display = 'flex';
+    this.dialogueEl.classList.add('has-choices');
+  }
+
+  hideChoices(): void {
+    this.dlgChoices.replaceChildren();
+    this.dlgChoices.style.display = 'none';
+    this.dialogueEl.classList.remove('has-choices');
   }
 
   showAccuse(suspects: SuspectDef[], onPick: (id: string) => void, onCancel: () => void): void {

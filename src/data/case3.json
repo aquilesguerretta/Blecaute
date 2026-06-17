@@ -1,0 +1,140 @@
+{
+  "id": "case3",
+  "title": "Subestação — O Gato Fantasma",
+  "minClues": 3,
+  "intro": [
+    {
+      "speaker": "Você",
+      "color": "#2e6f78",
+      "portraitKey": "portrait_agente",
+      "text": "Caso de campo: a subestação dá curto toda madrugada. Hora de cruzar os dados."
+    },
+    {
+      "speaker": "Saci",
+      "color": "#B03A2E",
+      "portraitKey": "portrait_saci",
+      "text": "Coleta as pistas, CONECTA elas no caderno e escolhe bem o que perguntar pro vigia!"
+    }
+  ],
+  "world": {
+    "w": 800,
+    "h": 700,
+    "buildings": [
+      { "x": 280, "y": 90, "w": 260, "h": 120, "name": "Subestação", "spriteKey": "building_centro_a" }
+    ],
+    "lights": [
+      { "x": 140, "y": 250 },
+      { "x": 660, "y": 290 },
+      { "x": 400, "y": 560 },
+      { "x": 250, "y": 190 }
+    ],
+    "props": [
+      { "x": 120, "y": 440, "kind": "tree" },
+      { "x": 690, "y": 500, "kind": "bench" },
+      { "x": 300, "y": 590, "kind": "crate" },
+      { "x": 710, "y": 180, "kind": "tree" }
+    ]
+  },
+  "npcs": [
+    {
+      "id": "bento",
+      "name": "Vigia Bento",
+      "x": 230,
+      "y": 320,
+      "color": "#97C459",
+      "portraitKey": "portrait_nando",
+      "dialogue": [
+        {
+          "text": "Vigio a subestação a madrugada toda, agente. O que cê quer saber?",
+          "choices": [
+            { "text": "Onde você estava às 3h?", "goto": "bento_alibi" },
+            { "text": "Mostrar a curva de carga", "requires_clue": "c_curva", "goto": "bento_curva" }
+          ]
+        },
+        {
+          "id": "bento_alibi",
+          "end": true,
+          "text": "Na guarita, tomando café. Mas ouvi um zumbido feio vindo lá de dentro."
+        },
+        {
+          "id": "bento_curva",
+          "end": true,
+          "text": "Esse bloco RETO de madrugada?! Isso não é gente, não — é máquina ligada direto na rede!"
+        }
+      ],
+      "clue": {
+        "id": "c_vigia",
+        "text": "Vigia ouviu zumbido constante dentro da subestação na madrugada."
+      }
+    }
+  ],
+  "inspectables": [
+    {
+      "id": "curva-ct09",
+      "name": "Curva de carga · CT-09",
+      "x": 560,
+      "y": 300,
+      "dialogue": [
+        "Curva de carga: bloco RETO de 60 kW, das 0h às 5h.",
+        "Plano e constante feito régua — assinatura de máquina, não de gente."
+      ],
+      "clue": {
+        "id": "c_curva",
+        "text": "Bloco constante de 60 kW na madrugada — assinatura de máquina."
+      }
+    },
+    {
+      "id": "trafo-sub",
+      "name": "Trafo da Subestação",
+      "x": 470,
+      "y": 470,
+      "dialogue": [
+        "Trafo a 88°C às 3h da manhã.",
+        "Um cabo a mais saindo do barramento — não consta no diagrama."
+      ],
+      "clue": {
+        "id": "c_fio",
+        "text": "Cabo extra no trafo que não existe no diagrama."
+      }
+    }
+  ],
+  "deductions": [
+    {
+      "id": "ded_gato",
+      "requires": ["c_curva", "c_fio"],
+      "unlocks_clue": "c_gato",
+      "clue_text": "Bloco constante + cabo extra = ligação clandestina puxando carga direto.",
+      "saci_line": "Bloco reto na curva + um cabo a mais no trafo... alguém puxou um GATO na subestação!"
+    }
+  ],
+  "suspects": [
+    {
+      "id": "operador",
+      "name": "Operador Noturno",
+      "desc": "Tem a chave da subestação e some nas madrugadas.",
+      "correct": true,
+      "portraitKey": "portrait_morador",
+      "accuse_right_confession": "...puxei uma linha pra alimentar umas máquinas minhas. Achei que ninguém ia reparar num cabo a mais."
+    },
+    {
+      "id": "barista",
+      "name": "Dona do Bar",
+      "desc": "O bar fecha tarde, bem perto da subestação.",
+      "correct": false,
+      "accuse_wrong": "Meu bar fecha meia-noite, criatura. Às 3h tô roncando!",
+      "rebuttal": "O bar fecha cedo demais pra desenhar um bloco que vai até as 5h."
+    },
+    {
+      "id": "eletricista",
+      "name": "Eletricista",
+      "desc": "Fez manutenção na subestação semana passada.",
+      "correct": false,
+      "accuse_wrong": "Eu CONSERTO, não puxo gato. Olha o diagrama, tá tudo certo!",
+      "rebuttal": "Manutenção é de dia. O fantasma só aparece de madrugada."
+    }
+  ],
+  "victory": {
+    "reveal": "Ligação clandestina na subestação alimentava máquinas a noite inteira — bloco reto na curva, cabo a mais no trafo, e o quarteirão pagando o pato no rateio.",
+    "lesson": "Carga constante de madrugada é assinatura de máquina, não de gente. A curva de carga entrega o gato."
+  }
+}

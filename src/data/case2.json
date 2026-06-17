@@ -165,6 +165,7 @@
       "name": "Dona Cida",
       "desc": "Padeira. Liga os fornos às 4h da manhã, todo santo dia.",
       "correct": false,
+      "accuse_wrong": "Mocinho, meu forno liga às QUATRO e a luz cai às TRÊS. Faça a conta!",
       "rebuttal": "Os fornos ligam às 4h e a queda é às 3h, criatura! Inocente — e ainda faz o melhor pão da rua."
     },
     {
@@ -172,6 +173,7 @@
       "name": "Síndica Regina",
       "desc": "Cuida dos aluguéis da rua. Assinou os pedidos de ligação do sobrado.",
       "correct": false,
+      "accuse_wrong": "Eu só assinei a papelada que me trouxeram, oras. Não esquentei trafo nenhum.",
       "rebuttal": "Ela só assinou papelada. Burocracia não esquenta trafo a 96 graus."
     },
     {
@@ -179,7 +181,8 @@
       "name": "O morador do sobrado",
       "desc": "Alugou há 3 meses, pediu três ligações novas e ninguém nunca o viu entrar ou sair.",
       "correct": true,
-      "portraitKey": "portrait_morador"
+      "portraitKey": "portrait_morador",
+      "accuse_right_confession": "...as máquinas mineram cripto a noite toda. Dividi em três contas pra ninguém notar. Achei que ninguém ia ligar os pontos."
     }
   ],
   "victory": {

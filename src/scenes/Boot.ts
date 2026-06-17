@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { COMPANION, LIGHTS, PLAYER, WORLD_COLORS } from '../config';
 import { caseIdFromQuery } from '../systems/CaseLoader';
+import { audio, initAudio } from '../systems/AudioManager';
+
+const VIDEO_EXT = new Set(['mp4', 'webm']);
 
 /**
  * Gera todas as texturas placeholder em código (sem assets externos)
@@ -12,8 +15,9 @@ export class Boot extends Phaser.Scene {
   }
 
   preload(): void {
-    // o manifest é regravado pelo npm run assets com o que existe na pasta
+    // manifests regravados pelo npm run assets com o que existe na pasta
     this.load.json('asset-manifest', 'assets/manifest.json');
+    this.load.json('media-manifest', 'assets/media.json');
   }
 
   create(): void {
@@ -24,19 +28,49 @@ export class Boot extends Phaser.Scene {
     this.makeDevice();
     this.makeVignette();
 
-    const manifest = this.cache.json.get('asset-manifest') as unknown;
-    const keys = Array.isArray(manifest)
-      ? manifest.filter((k): k is string => typeof k === 'string')
-      : [];
-    for (const key of keys) {
+    initAudio(this.game);
+    // gancho do e2e: exercita o AudioManager mesmo sem arquivos (no-op gracioso)
+    (window as unknown as Record<string, unknown>).__audioTest = () => {
+      const a = audio();
+      if (!a) {
+        return false;
+      }
+      a.play('__none__', { loop: true, volume: 0.5 });
+      a.setVolume('__none__', 0.3);
+      a.stop('__none__');
+      a.stopAll();
+      return true;
+    };
+
+    const list = (k: string): string[] => {
+      const v = this.cache.json.get(k) as unknown;
+      return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+    };
+    for (const key of list('asset-manifest')) {
       this.load.image(key, `assets/${key}.png`);
     }
-    this.load.once(Phaser.Loader.Events.COMPLETE, () => this.route());
-    if (keys.length > 0) {
-      this.load.start();
-    } else {
-      this.route();
+    for (const file of list('media-manifest')) {
+      const key = file.replace(/\.[^.]+$/, '');
+      const ext = file.split('.').pop()?.toLowerCase() ?? '';
+      if (VIDEO_EXT.has(ext)) {
+        this.load.video(key, `assets/${file}`);
+      } else {
+        this.load.audio(key, `assets/${file}`);
+      }
     }
+    // mídia faltante/indecodificável não pode travar o boot
+    this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, () => undefined);
+
+    let routed = false;
+    const goOnce = (): void => {
+      if (!routed) {
+        routed = true;
+        this.route();
+      }
+    };
+    this.load.once(Phaser.Loader.Events.COMPLETE, goOnce);
+    this.time.delayedCall(6000, goOnce); // segurança: nunca trava no boot
+    this.load.start();
   }
 
   private route(): void {

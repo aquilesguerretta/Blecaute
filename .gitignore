@@ -23,6 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 
-# fontes de arte pesadas (processadas para /public/assets via npm run assets;
+# fontes pesadas (processadas/copiadas p/ /public/assets via npm run assets;
 # backup da pasta fica no OneDrive)
 /raw/*.png
+/raw/*.mp4
+/raw/*.webm
+/raw/*.mp3
+/raw/*.ogg
+/raw/*.m4a
+/raw/*.wav

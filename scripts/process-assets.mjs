@@ -2,11 +2,11 @@
 // redimensiona para a largura-alvo de config.ts e salva em /public/assets.
 // Sempre regrava public/assets/manifest.json com o que existe na pasta —
 // o Boot só carrega o que está no manifest (sem 404 quando /raw está vazia).
-import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { ASSET_WIDTHS, DEFAULT_ASSET_WIDTH } from '../src/config.ts';
+import { ASSET_WIDTHS, DEFAULT_ASSET_WIDTH } from '../src/asset-widths.ts';
 
 const RAW = 'raw';
 const OUT = 'public/assets';
@@ -104,7 +104,26 @@ const manifest = (await readdir(OUT))
   .sort();
 await writeFile(path.join(OUT, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
+// mídia (vídeo/áudio): copiada como está de /raw para /public/assets + media.json
+const MEDIA_EXT = new Set(['.mp4', '.webm', '.mp3', '.ogg', '.m4a', '.wav']);
+let mediaCopied = 0;
+if (existsSync(RAW)) {
+  for (const file of await readdir(RAW)) {
+    if (MEDIA_EXT.has(path.extname(file).toLowerCase())) {
+      await copyFile(path.join(RAW, file), path.join(OUT, file));
+      mediaCopied += 1;
+      console.log(`mídia: ${file} -> ${OUT}/${file}`);
+    }
+  }
+}
+const media = (await readdir(OUT))
+  .filter((f) => MEDIA_EXT.has(path.extname(f).toLowerCase()))
+  .sort();
+await writeFile(path.join(OUT, 'media.json'), `${JSON.stringify(media, null, 2)}\n`);
+
 for (const w of warnings) {
   console.warn('aviso:', w);
 }
-console.log(`${processed} processado(s), ${manifest.length} asset(s) no manifest.`);
+console.log(
+  `${processed} png(s), ${mediaCopied} mídia(s) copiada(s); manifest: ${manifest.length} img, ${media.length} mídia.`,
+);

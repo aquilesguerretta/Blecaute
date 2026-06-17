@@ -91,6 +91,12 @@ export class World extends Phaser.Scene {
     const built = buildWorld(this, this.caseData);
     this.lightField = built.lights;
     this.npcs = built.npcs;
+    // a cena é reusada entre casos: zera estado por-visita p/ não acumular
+    this.indicators = [];
+    this.talkedNpcs.clear();
+    this.inspectedIds.clear();
+    this.currentInteract = null;
+    this.lastInteractLabel = null;
     if (this.prog.solved) {
       this.lightField.solve(false);
     }
